@@ -1,0 +1,3 @@
+data/
+.DS_Store
+code/vgg16_imagenet.h5
