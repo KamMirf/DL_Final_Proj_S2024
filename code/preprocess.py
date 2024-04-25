@@ -1,5 +1,10 @@
 import os
 import shutil
+###########################################################################################################################
+###################         THIS IS FOR MAKING COPIES OF DATA THAT ONLY HAVE 'STILL' IN THE FILE NAME #####################
+###################         HOWEVER, MAYBE THE FACEFORENSICS PREPROCESS.PY FILE HAS ALL THE           #####################
+###################         PREPROCESSING WE NEED SINCE IS DETECTS FACES AND THEN CREATES BOUNDING    #####################
+###################         BOXES AROUND THE FACES AND CROPS IT. IDK WE'LL HAVE TO SEE WHAT WORKS     #####################
 
 def ensure_dir(directory):
     """Ensure the directory exists. If not, create it."""
@@ -39,7 +44,9 @@ def main():
 if __name__ == "__main__":
     main()
 
-
+###########################################################################################################################
+###########################################################################################################################
+###########################################################################################################################
 
 
 
