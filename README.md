@@ -2,6 +2,7 @@
 Deepfake Detection
 
 ### Organize files as such
+```
 |-- code
     |-- download_FF.py
     |-- hyperparameters.py
@@ -20,3 +21,4 @@ Deepfake Detection
 |-- sample_data
     |-- deepfake
     |-- original
+```
