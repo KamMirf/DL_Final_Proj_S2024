@@ -1,274 +1,125 @@
+"""
+Evaluates a folder of video files or a single file with a xception binary
+classification network.
+
+Usage:
+python preprocess.py
+    -i <folder with video files or path to video file>
+    -o <path to output folder, will write one or multiple output videos there>
+
+Original Author: Andreas Rössler
+Editied and modified: Jason Pien
+"""
+
 import os
-import shutil
-###########################################################################################################################
-###################         THIS IS FOR MAKING COPIES OF DATA THAT ONLY HAVE 'STILL' IN THE FILE NAME #####################
-###################         HOWEVER, MAYBE THE FACEFORENSICS PREPROCESS.PY FILE HAS ALL THE           #####################
-###################         PREPROCESSING WE NEED SINCE IS DETECTS FACES AND THEN CREATES BOUNDING    #####################
-###################         BOXES AROUND THE FACES AND CROPS IT. IDK WE'LL HAVE TO SEE WHAT WORKS     #####################
+import argparse
+import cv2  #conda install -c conda-forge opencv        Then conda install cv2
+import dlib #conda install -c conda-forge dlib
+from os.path import join
+from tqdm import tqdm
 
-def ensure_dir(directory):
-    """Ensure the directory exists. If not, create it."""
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-def filter_and_copy_files(source_dir, target_dir, keyword):
-    """Filter and copy files containing the keyword in their names from source to target directory."""
-    for root, dirs, files in os.walk(source_dir):
-        for file in files:
-            if keyword in file:
-                src_file_path = os.path.join(root, file)
-                dst_file_path = os.path.join(target_dir, file)
-                shutil.copy2(src_file_path, dst_file_path)
-
-def main():
-    # Define directories
-    base_data_dir = "data"
-    filtered_data_dir = "filtered_data"
-
-    original_source_dir = os.path.join(base_data_dir, "original_sequences/actors/c23/videos")
-    manipulated_source_dir = os.path.join(base_data_dir, "manipulated_sequences/DeepFakeDetection/c23/videos")
+def get_boundingbox(face, width, height, scale=1.3, minsize=None):
+    x1 = face.left()    # Get the left position of the face
+    y1 = face.top()     # Get the top position of the face
+    x2 = face.right()   # Get the right position of the face
+    y2 = face.bottom()  # Get the bottom position of the face
     
-    original_target_dir = os.path.join(filtered_data_dir, "originals")
-    manipulated_target_dir = os.path.join(filtered_data_dir, "DeepFakes")
+    # Calculate the size of the bounding box, scaling it by 'scale'
+    size_bb = int(max(x2 - x1, y2 - y1) * scale)
+    
+    # If a minimum size is specified, enforce this minimum size
+    if minsize:
+        if size_bb < minsize:
+            size_bb = minsize
+    
+    # Calculate the center of the bounding box
+    center_x, center_y = (x1 + x2) // 2, (y1 + y2) // 2
+    
+    # Adjust the top-left corner of the bounding box to ensure it's within the frame
+    x1 = max(int(center_x - size_bb // 2), 0)
+    y1 = max(int(center_y - size_bb // 2), 0)
+    
+    # Ensure the bounding box does not exceed the dimensions of the image
+    size_bb = min(width - x1, size_bb)
+    size_bb = min(height - y1, size_bb)
+    
+    return x1, y1, size_bb
 
-    # Ensure target directories exist
-    ensure_dir(original_target_dir)
-    ensure_dir(manipulated_target_dir)
+def extract_faces(video_path, output_path, scale=1.3, minsize=None, frame_skip=5):
+    
+    video_name = os.path.splitext(os.path.basename(video_path))[0]  # Extract the video name without extension to use in output filenames
+    print(f'Processing: {video_path}')  # Print which video is currently being processed
+    
+    reader = cv2.VideoCapture(video_path) # Open the video file for processing
+    
+    if not reader.isOpened():   # Check if the video was opened successfully
+        print(f"Error: Cannot open video {video_path}.")
+        return
 
-    # Filter and copy original videos
-    filter_and_copy_files(original_source_dir, original_target_dir, "still")
+    num_frames = int(reader.get(cv2.CAP_PROP_FRAME_COUNT)) # Get the total number of frames in the video
+    
+    face_detector = dlib.get_frontal_face_detector()# Initialize the face detector from dlib
+    
+    pbar = tqdm(total=max(1, num_frames // frame_skip), desc="Processing frames")# Setup a progress bar with the total number of frames to process considering skips
+    frame_num = 0  # Initialize frame counter
 
-    # Filter and copy manipulated videos
-    filter_and_copy_files(manipulated_source_dir, manipulated_target_dir, "still")
+    
+    while True:# Process video frame by frame
+        ret, image = reader.read()  # Read a frame from the video
+        if not ret:  # If no frame is read (end of video or error), break the loop
+            break
+        if frame_num % frame_skip == 0:  # Process this frame only if it's a 'frame_skip' interval
+            height, width = image.shape[:2]  # Get dimensions of the frame
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # Convert the frame to grayscale for face detection
+            faces = face_detector(gray, 1)  # Detect faces in the grayscale image
 
-if __name__ == "__main__":
-    main()
+            
+            for i, face in enumerate(faces):# Iterate through each detected face
+                x, y, size = get_boundingbox(face, width, height, scale=scale, minsize=minsize)  # Calculate bounding box
+                cropped_face = image[y:y+size, x:x+size]  # Crop the face from the image
+                save_path = join(output_path, f'{video_name}_frame_{frame_num}_face_{i}.jpg')# Construct the path where the cropped image will be saved
+                cv2.imwrite(save_path, cropped_face)  # Save the cropped face image
 
-###########################################################################################################################
-###########################################################################################################################
-###########################################################################################################################
+            pbar.update(1)  # Update the progress bar for every processed frame
 
+        frame_num += 1  # Increment the frame counter
 
+    pbar.close()  # Close the progress bar when all frames are processed
+    reader.release()  # Release the video file
+    print(f'Finished processing {video_path}')  # Print completion message
 
-
-
-
-
-
-
-
-
-############———CV Code———################
-
-import os
-import random
-import numpy as np
-from PIL import Image
-import tensorflow as tf
-
-import hyperparameters as hp
-
-class Datasets():
-    """ Class for containing the training and test sets as well as
-    other useful data-related information. Contains the functions
-    for preprocessing.
+if __name__ == '__main__':
     """
+    Here's how to run:
+    python3 preprocess.py --video_path /path/to/video_directory --output_path /path/to/output_directory
 
-    def __init__(self, data_path, task=3):
+    Working example for original:
+    python3 preprocess.py --video_path ../sample_data/original --output_path ../cropped_data/original_cropped --frame_skip 100
 
-        self.data_path = data_path
-        self.task = task
+    Working example for deepfake:
+    python3 preprocess.py --video_path ../sample_data/deepfake --output_path ../cropped_data/deepfake_cropped --frame_skip 100
 
-        # Dictionaries for (label index) <--> (class name)
-        self.idx_to_class = {}
-        self.class_to_idx = {}
+    Make sure destination folders are made BEFOREHAND
 
-        # For storing list of classes
-        self.classes = [""] * hp.num_classes
+    The skip frame argument tells how many frames to skip between each 'screenshot.' Otherwise we'd have a jpg for 
+    every frame in the video. at 60 fps with 30 sec clips, you get the idea
+    """
+    p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    p.add_argument('--video_path', '-i', type=str, required=True)
+    p.add_argument('--output_path', '-o', type=str, required=True)
+    p.add_argument('--frame_skip', type=int, default=5, help='Number of frames to skip between processing.')
+    args = p.parse_args()
 
-        # Mean and std for standardization
-        self.mean = np.zeros((hp.img_size,hp.img_size,3))
-        self.std = np.ones((hp.img_size,hp.img_size,3))
-        self.calc_mean_and_std()
-
-        # Setup data generators
-        # These feed data to the training and testing routine based on the dataset
-        self.train_data = self.get_data(
-            os.path.join(self.data_path, "train/"), task == '3', True, True)
-        self.test_data = self.get_data(
-            os.path.join(self.data_path, "test/"), task == '3', False, False)
-
-    def calc_mean_and_std(self):
-        """ Calculate mean and standard deviation of a sample of the
-        training dataset for standardization.
-
-        Arguments: none
-
-        Returns: none
-        """
-
-        # Get list of all images in training directory
-        file_list = []
-        for root, _, files in os.walk(os.path.join(self.data_path, "train/")):
-            for name in files:
-                if name.endswith(".jpg"):
-                    file_list.append(os.path.join(root, name))
-
-        # Shuffle filepaths
-        random.shuffle(file_list)
-
-        # Take sample of file paths
-        file_list = file_list[:hp.preprocess_sample_size]
-
-        # Allocate space in memory for images
-        data_sample = np.zeros(
-            (hp.preprocess_sample_size, hp.img_size, hp.img_size, 3))
-
-        # Import images
-        for i, file_path in enumerate(file_list):
-            img = Image.open(file_path)
-            img = img.resize((hp.img_size, hp.img_size))
-            img = np.array(img, dtype=np.float32)
-            img /= 255.
-
-            # Grayscale -> RGB
-            if len(img.shape) == 2:
-                img = np.stack([img, img, img], axis=-1)
-
-            data_sample[i] = img
-
-        self.mean = np.mean(data_sample, axis=0)
-        self.std = np.std(data_sample, axis=0)
-
-        # ==========================================================
-
-        print("Dataset mean shape: [{0}, {1}, {2}]".format(
-            self.mean.shape[0], self.mean.shape[1], self.mean.shape[2]))
-
-        print("Dataset mean top left pixel value: [{0:.4f}, {1:.4f}, {2:.4f}]".format(
-            self.mean[0,0,0], self.mean[0,0,1], self.mean[0,0,2]))
-
-        print("Dataset std shape: [{0}, {1}, {2}]".format(
-            self.std.shape[0], self.std.shape[1], self.std.shape[2]))
-
-        print("Dataset std top left pixel value: [{0:.4f}, {1:.4f}, {2:.4f}]".format(
-            self.std[0,0,0], self.std[0,0,1], self.std[0,0,2]))
-
-    def standardize(self, img):
-        """ Function for applying standardization to an input image.
-
-        Arguments:
-            img - numpy array of shape (image size, image size, 3)
-
-        Returns:
-            img - numpy array of shape (image size, image size, 3)
-        """
-
-        img = (img - self.mean) / self.std    
-
-
-        return img
-
-    def preprocess_fn(self, img):
-        """ Preprocess function for ImageDataGenerator. """
-
-        if self.task == '3':
-            img = tf.keras.applications.vgg16.preprocess_input(img)
+    # Check if the provided video path is a directory or a single file
+    if os.path.isdir(args.video_path):
+        # List all video files in the directory with specified extensions
+        videos = [join(args.video_path, video) for video in os.listdir(args.video_path) if video.endswith(('.mp4', '.avi'))]
+        if not videos:
+            print("No video files found in the directory.")  # Inform if no videos are found
         else:
-            img = img / 255.
-            img = self.standardize(img)
-        return img
-
-    def custom_preprocess_fn(self, img):
-        """ Custom preprocess function for ImageDataGenerator. """
-
-        if self.task == '3':
-            img = tf.keras.applications.vgg16.preprocess_input(img)
-        else:
-            img = img / 255.
-            img = self.standardize(img)
-
-        # EXTRA CREDIT: 
-        # Write your own custom data augmentation procedure, creating
-        # an effect that cannot be achieved using the arguments of
-        # ImageDataGenerator. This can potentially boost your accuracy
-        # in the validation set. Note that this augmentation should
-        # only be applied to some input images, so make use of the
-        # 'random' module to make sure this happens. Also, make sure
-        # that ImageDataGenerator uses *this* function for preprocessing
-        # on augmented data.
-
-        if random.random() < 0.3:
-            img = img + tf.random.uniform(
-                (hp.img_size, hp.img_size, 1),
-                minval=-0.1,
-                maxval=0.1)
-
-        return img
-
-    def get_data(self, path, is_vgg, shuffle, augment):
-        """ Returns an image data generator which can be iterated
-        through for images and corresponding class labels.
-
-        Arguments:
-            path - Filepath of the data being imported, such as
-                   "../data/train" or "../data/test"
-            is_vgg - Boolean value indicating whether VGG preprocessing
-                     should be applied to the images.
-            shuffle - Boolean value indicating whether the data should
-                      be randomly shuffled.
-            augment - Boolean value indicating whether the data should
-                      be augmented or not.
-
-        Returns:
-            An iterable image-batch generator
-        """
-
-        if augment:
-
-            data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-                preprocessing_function=self.preprocess_fn
-                , 
-                rotation_range=3, 
-                width_shift_range=0.15, 
-                height_shift_range=0.15,
-                zoom_range=0.10,
-                horizontal_flip=True
-                )
-
-        else:
-            # Don't modify this
-            data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-                preprocessing_function=self.preprocess_fn)
-
-        # VGG must take images of size 224x224
-        img_size = 224 if is_vgg else hp.img_size
-
-        classes_for_flow = None
-
-        # Make sure all data generators are aligned in label indices
-        if bool(self.idx_to_class):
-            classes_for_flow = self.classes
-
-        # Form image data generator from directory structure
-        data_gen = data_gen.flow_from_directory(
-            path,
-            target_size=(img_size, img_size),
-            class_mode='sparse',
-            batch_size=hp.batch_size,
-            shuffle=shuffle,
-            classes=classes_for_flow)
-
-        # Setup the dictionaries if not already done
-        if not bool(self.idx_to_class):
-            unordered_classes = []
-            for dir_name in os.listdir(path):
-                if os.path.isdir(os.path.join(path, dir_name)):
-                    unordered_classes.append(dir_name)
-
-            for img_class in unordered_classes:
-                self.idx_to_class[data_gen.class_indices[img_class]] = img_class
-                self.class_to_idx[img_class] = int(data_gen.class_indices[img_class])
-                self.classes[int(data_gen.class_indices[img_class])] = img_class
-
-        return data_gen
+            # Process each video found in the directory
+            for video in videos:
+                extract_faces(video, args.output_path, frame_skip=args.frame_skip)
+    else:
+        # Process a single video file
+        extract_faces(args.video_path, args.output_path, frame_skip=args.frame_skip)
