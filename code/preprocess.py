@@ -18,6 +18,7 @@ import cv2  #conda install -c conda-forge opencv        Then conda install cv2
 import dlib #conda install -c conda-forge dlib
 from os.path import join
 from tqdm import tqdm
+import numpy as np
 
 def get_boundingbox(face, width, height, scale=1.3, minsize=None):
     x1 = face.left()    # Get the left position of the face
@@ -60,6 +61,8 @@ def extract_faces(video_path, output_path, scale=1.3, minsize=None, frame_skip=5
     num_frames = int(reader.get(cv2.CAP_PROP_FRAME_COUNT)) # Get the total number of frames in the video
     
     face_detector = dlib.get_frontal_face_detector()# Initialize the face detector from dlib
+    predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")  # Pretrained facial landmark detector
+
     
     pbar = tqdm(total=max(1, num_frames // frame_skip), desc="Processing frames")# Setup a progress bar with the total number of frames to process considering skips
     frame_num = 0  # Initialize frame counter
@@ -76,10 +79,42 @@ def extract_faces(video_path, output_path, scale=1.3, minsize=None, frame_skip=5
 
             
             for i, face in enumerate(faces):# Iterate through each detected face
-                x, y, size = get_boundingbox(face, width, height, scale=scale, minsize=minsize)  # Calculate bounding box
-                cropped_face = image[y:y+size, x:x+size]  # Crop the face from the image
-                save_path = join(output_path, f'{video_name}_frame_{frame_num}_face_{i}.jpg')# Construct the path where the cropped image will be saved
-                cv2.imwrite(save_path, cropped_face)  # Save the cropped face image
+                landmarks = predictor(gray, face)
+
+                nose_point = landmarks.part(33).x, landmarks.part(33).y
+                left_eye = landmarks.part(36).x, landmarks.part(36).y
+                right_eye = landmarks.part(45).x, landmarks.part(45).y
+
+                # Calculate the angle to rotate the face to be aligned
+                dY = right_eye[1] - left_eye[1]
+                dX = right_eye[0] - left_eye[0]
+                angle = np.degrees(np.arctan2(dY, dX))
+
+                # Calculate the center of the face
+                eyes_center = ((left_eye[0] + right_eye[0]) // 2, (left_eye[1] + right_eye[1]) // 2)
+
+                # Align the face
+                M = cv2.getRotationMatrix2D(eyes_center, angle, 1)
+                aligned_face = cv2.warpAffine(image, M, (image.shape[1], image.shape[0]))
+
+                h, w = aligned_face.shape[:2]
+                center_of_image = (w // 2, h // 2)
+                shift_x = center_of_image[0] - nose_point[0]
+                shift_y = center_of_image[1] - nose_point[1]
+
+                # Translation matrix
+                M = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
+                centered_face = cv2.warpAffine(aligned_face, M, (w, h))
+
+                # Detect faces in the grayscale image
+                gray2 = cv2.cvtColor(centered_face, cv2.COLOR_BGR2GRAY)
+                faces2 = face_detector(gray2, 1)
+
+                for face2 in faces2:
+                    x, y, size = get_boundingbox(face2, width, height, scale=scale, minsize=minsize)  # Calculate bounding box
+                    cropped_face = centered_face[y:y+size, x:x+size]  # Crop the face from the image
+                    save_path = join(output_path, f'{video_name}_frame_{frame_num}_face_{i}.jpg')# Construct the path where the cropped image will be saved
+                    cv2.imwrite(save_path, cropped_face)  # Save the cropped face image
 
             pbar.update(1)  # Update the progress bar for every processed frame
 
