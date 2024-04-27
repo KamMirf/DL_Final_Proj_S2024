@@ -8,7 +8,7 @@ python preprocess.py
     -o <path to output folder, will write one or multiple output videos there>
 
 Original Author: Andreas Rössler
-Editied and modified: Jason Pien
+Editied and modified: Jason Pien & Joey Ricciardulli
 """
 
 
@@ -47,7 +47,7 @@ def get_boundingbox(face, width, height, scale=1.3, minsize=None):
     
     return x1, y1, size_bb
 
-def extract_faces(video_path, output_path, scale=1.3, minsize=None, frame_skip=5):
+def extract_faces(video_path, output_path, scale=1.3, minsize=None, frame_skip=5, target_size=(256,256)):
     
     video_name = os.path.splitext(os.path.basename(video_path))[0]  # Extract the video name without extension to use in output filenames
     print(f'Processing: {video_path}')  # Print which video is currently being processed
@@ -114,7 +114,8 @@ def extract_faces(video_path, output_path, scale=1.3, minsize=None, frame_skip=5
                     x, y, size = get_boundingbox(face2, width, height, scale=scale, minsize=minsize)  # Calculate bounding box
                     cropped_face = centered_face[y:y+size, x:x+size]  # Crop the face from the image
                     save_path = join(output_path, f'{video_name}_frame_{frame_num}_face_{i}.jpg')# Construct the path where the cropped image will be saved
-                    cv2.imwrite(save_path, cropped_face)  # Save the cropped face image
+                    resized_face = cv2.resize(cropped_face, target_size)
+                    cv2.imwrite(save_path, resized_face)  # Save the cropped face image
 
             pbar.update(1)  # Update the progress bar for every processed frame
 
@@ -159,3 +160,4 @@ if __name__ == '__main__':
     else:
         # Process a single video file
         extract_faces(args.video_path, args.output_path, frame_skip=args.frame_skip)
+
