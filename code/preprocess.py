@@ -129,6 +129,15 @@ def extract_faces(video_path, output_path, scale=1.3, minsize=None, frame_skip=5
     print(f'Finished processing {video_path}')  # Print completion message
 
 def split_data(data_dir, test_size=0.2):
+    """
+    Notes:
+    Randomization: train_test_split function shuffles the data by default 
+                   before splitting (unless the shuffle parameter is explicitly 
+                   set to False)
+    Stratification: The stratify=labels parameter ensures that both training 
+                    and testing datasets have approximately the same percentage 
+                    of samples of each target class as the complete set
+    """
     # Ensure that the correct directories are referenced
     deepfake_dir = os.path.join(data_dir, 'deepfake_cropped')
     original_dir = os.path.join(data_dir, 'original_cropped')
