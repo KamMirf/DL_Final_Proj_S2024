@@ -19,6 +19,8 @@ import dlib #conda install -c conda-forge dlib
 from os.path import join
 from tqdm import tqdm
 import numpy as np
+from sklearn.model_selection import train_test_split
+import shutil
 
 def get_boundingbox(face, width, height, scale=1.3, minsize=None):
     x1 = face.left()    # Get the left position of the face
@@ -46,6 +48,7 @@ def get_boundingbox(face, width, height, scale=1.3, minsize=None):
     size_bb = min(height - y1, size_bb)
     
     return x1, y1, size_bb
+
 
 def extract_faces(video_path, output_path, scale=1.3, minsize=None, frame_skip=5, target_size=(256,256)):
     
@@ -125,39 +128,93 @@ def extract_faces(video_path, output_path, scale=1.3, minsize=None, frame_skip=5
     reader.release()  # Release the video file
     print(f'Finished processing {video_path}')  # Print completion message
 
+def split_data(data_dir, test_size=0.2):
+    # Ensure that the correct directories are referenced
+    deepfake_dir = os.path.join(data_dir, 'deepfake_cropped')
+    original_dir = os.path.join(data_dir, 'original_cropped')
+
+    # Validate the existence of directories
+    if not os.path.exists(deepfake_dir) or not os.path.exists(original_dir):
+        print(f"Required directories not found. Ensure both 'deepfake_cropped' and 'original_cropped' exist under {data_dir}.")
+        return
+
+    # Collect all deepfake and original images
+    deepfake_images = [os.path.join(deepfake_dir, f) for f in os.listdir(deepfake_dir) if f.endswith('.jpg')]
+    original_images = [os.path.join(original_dir, f) for f in os.listdir(original_dir) if f.endswith('.jpg')]
+
+
+    # Create labels: 1 for deepfake, 0 for original
+    labels = [1] * len(deepfake_images) + [0] * len(original_images)
+    all_images = deepfake_images + original_images
+
+    # Split data into training and test sets
+    train_images, test_images, train_labels, test_labels = train_test_split(
+        all_images, labels, test_size=test_size, stratify=labels)
+
+    # Create directories for the train/test datasets
+    train_dir = os.path.join(data_dir, 'train')
+    test_dir = os.path.join(data_dir, 'test')
+    os.makedirs(train_dir, exist_ok=True)
+    os.makedirs(test_dir, exist_ok=True)
+
+    # Function to copy files to new training/testing directories
+    def copy_files(files, labels, dest_dir):
+        for file_path, label in zip(files, labels):
+            label_dir = os.path.join(dest_dir, 'deepfake' if label == 1 else 'original')
+            os.makedirs(label_dir, exist_ok=True)
+            shutil.copy(file_path, label_dir)
+
+    # Copy the split files into their respective directories
+    copy_files(train_images, train_labels, train_dir)
+    copy_files(test_images, test_labels, test_dir)
+    print(f"Training and testing data prepared: {len(train_images)} training and {len(test_images)} testing images.")
+
+
 if __name__ == '__main__':
     """
     Here's how to run:
     python3 preprocess.py --video_path /path/to/video_directory --output_path /path/to/output_directory
 
+    #############   GETTING NON-DEEPFAKE FRAMES   ##############
     Working example for original:
     python3 preprocess.py --video_path ../sample_data/original --output_path ../cropped_data/original_cropped --frame_skip 100
 
+    #############   GETTING DEEPFAKE FRAMES   ##############
     Working example for deepfake:
     python3 preprocess.py --video_path ../sample_data/deepfake --output_path ../cropped_data/deepfake_cropped --frame_skip 100
 
-    Make sure destination folders are made BEFOREHAND
+        Make sure destination folders are made BEFOREHAND
 
-    The skip frame argument tells how many frames to skip between each 'screenshot.' Otherwise we'd have a jpg for 
-    every frame in the video. at 60 fps with 30 sec clips, you get the idea
+        The skip frame argument tells how many frames to skip between each 'screenshot.' Otherwise, we'd have a jpg for 
+        every frame in the video at 60 fps with 30 sec clips, you get the idea
+
+    #############   SPLITTING THE DATA INTO TRAIN/TEST   ##############
+    Splitting Test and Train data (Optional):
+    After processing both original and deepfake videos, run:
+    python3 preprocess.py --data_dir ../cropped_data --split_data
     """
-    p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    p.add_argument('--video_path', '-i', type=str, required=True)
-    p.add_argument('--output_path', '-o', type=str, required=True)
-    p.add_argument('--frame_skip', type=int, default=5, help='Number of frames to skip between processing.')
-    args = p.parse_args()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--video_path', '-i', type=str, help='Path to the video directory or a single video file')
+    parser.add_argument('--output_path', '-o', type=str, help='Path to the output directory where cropped images will be saved')
+    parser.add_argument('--frame_skip', type=int, default=5, help='Number of frames to skip between processing')
+    parser.add_argument('--data_dir', type=str, help='Directory containing both deepfake_cropped and original_cropped for data splitting')
+    parser.add_argument('--split_data', action='store_true', help='Set this flag to split the data into training and testing sets after processing')
+    args = parser.parse_args()
 
-    # Check if the provided video path is a directory or a single file
-    if os.path.isdir(args.video_path):
-        # List all video files in the directory with specified extensions
-        videos = [join(args.video_path, video) for video in os.listdir(args.video_path) if video.endswith(('.mp4', '.avi'))]
-        if not videos:
-            print("No video files found in the directory.")  # Inform if no videos are found
+    # Process videos if video_path and output_path are provided
+    if args.video_path and args.output_path:
+        if os.path.isdir(args.video_path):
+            videos = [join(args.video_path, video) for video in os.listdir(args.video_path) if video.endswith(('.mp4', '.avi'))]
+            if not videos:
+                print("No video files found in the directory.")
+            else:
+                for video in videos:
+                    extract_faces(video, args.output_path, frame_skip=args.frame_skip)
         else:
-            # Process each video found in the directory
-            for video in videos:
-                extract_faces(video, args.output_path, frame_skip=args.frame_skip)
-    else:
-        # Process a single video file
-        extract_faces(args.video_path, args.output_path, frame_skip=args.frame_skip)
+            extract_faces(args.video_path, args.output_path, frame_skip=args.frame_skip)
 
+    # Optionally split the data if the flag is set and data_dir is provided
+    if args.split_data and args.data_dir:
+        print("Splitting the data into training and testing sets...")
+        split_data(args.data_dir, test_size=0.2)
+        print("Data splitting complete.")

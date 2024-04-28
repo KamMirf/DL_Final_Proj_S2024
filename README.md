@@ -12,6 +12,12 @@ Deepfake Detection
 |-- cropped_data
     |-- deepfake_cropped
     |-- original_cropped
+    |-- test
+        |-- deepfake
+        |-- original
+    |-- train
+        |-- deepfake
+        |-- original
 |-- data
     |-- manipulated_sequences
     |-- original_sequences
