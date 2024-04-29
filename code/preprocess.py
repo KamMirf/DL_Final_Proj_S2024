@@ -14,7 +14,7 @@ Editied and modified: Jason Pien & Joey Ricciardulli
 
 import os
 import argparse
-import cv2  #conda install -c conda-forge opencv        Then conda install cv2
+import cv2  #conda install -c conda-forge opencv        Then conda install cv2\
 import dlib #conda install -c conda-forge dlib
 from os.path import join
 from tqdm import tqdm
@@ -188,10 +188,13 @@ if __name__ == '__main__':
     Working example for original:
     python3 preprocess.py --video_path ../sample_data/original --output_path ../cropped_data/original_cropped --frame_skip 100
 
+    #data/original_sequences/actors/c23/videos
+    python3 preprocess.py --video_path ../data/original_sequences/actors/c23/videos --output_path ../cropped_data/original_cropped --frame_skip 100
     #############   GETTING DEEPFAKE FRAMES   ##############
     Working example for deepfake:
     python3 preprocess.py --video_path ../sample_data/deepfake --output_path ../cropped_data/deepfake_cropped --frame_skip 100
 
+        python3 preprocess.py --video_path ../data/manipulated_sequences/DeepFakeDetection/c23/videos --output_path ../cropped_data/deepfake_cropped --frame_skip 100
         Make sure destination folders are made BEFOREHAND
 
         The skip frame argument tells how many frames to skip between each 'screenshot.' Otherwise, we'd have a jpg for 
@@ -217,7 +220,10 @@ if __name__ == '__main__':
             if not videos:
                 print("No video files found in the directory.")
             else:
+                i = 0
                 for video in videos:
+                    print(i, "/", len(videos))
+                    i = i + 1
                     extract_faces(video, args.output_path, frame_skip=args.frame_skip)
         else:
             extract_faces(args.video_path, args.output_path, frame_skip=args.frame_skip)

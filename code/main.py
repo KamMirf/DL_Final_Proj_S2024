@@ -6,9 +6,9 @@ import tensorflow as tf
 
 import hyperparameters as hp
 from model import VGGModel
-from preprocess import Datasets
-from tensorboard_utils import \
-        ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
+from preprocess_playground import Datasets
+# from tensorboard_utils import \
+#         ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
 
 from matplotlib import pyplot as plt
 
@@ -29,7 +29,7 @@ def parse_args():
     #     training from scratch (1), or fine tuning VGG-16 (3).''')
     parser.add_argument(
         '--data',
-        default='..'+os.sep+'data'+os.sep,
+        default='..'+os.sep+'cropped_data'+os.sep,
         help='Location where the dataset is stored.')
     parser.add_argument(
         '--load-vgg',
@@ -65,14 +65,14 @@ def train(model, datasets, checkpoint_path, logs_path, init_epoch):
         tf.keras.callbacks.TensorBoard(
             log_dir=logs_path,
             update_freq='batch',
-            profile_batch=0),
-        ImageLabelingLogger(logs_path, datasets),
+            profile_batch=0)
+        # ImageLabelingLogger(logs_path, datasets),
         # CustomModelSaver(checkpoint_path, ARGS.task, hp.max_num_weights)
     ]
 
     # Include confusion logger in callbacks if flag set
-    if ARGS.confusion:
-        callback_list.append(ConfusionMatrixLogger(logs_path, datasets))
+    # if ARGS.confusion:
+        # callback_list.append(ConfusionMatrixLogger(logs_path, datasets))
 
     # Begin training
     model.fit(
@@ -113,8 +113,8 @@ def main():
 
     # Run script from location of main.py
     os.chdir(sys.path[0])
-
-    datasets = Datasets(ARGS.data, ARGS.task)
+    print("ARGS data: " + ARGS.data) 
+    datasets = Datasets(ARGS.data, 3)
     
     
     model = VGGModel()

@@ -188,15 +188,6 @@ class Datasets():
             img = img / 255.
             img = self.standardize(img)
 
-        # EXTRA CREDIT: 
-        # Write your own custom data augmentation procedure, creating
-        # an effect that cannot be achieved using the arguments of
-        # ImageDataGenerator. This can potentially boost your accuracy
-        # in the validation set. Note that this augmentation should
-        # only be applied to some input images, so make use of the
-        # 'random' module to make sure this happens. Also, make sure
-        # that ImageDataGenerator uses *this* function for preprocessing
-        # on augmented data.
 
         if random.random() < 0.3:
             img = img + tf.random.uniform(

@@ -64,13 +64,6 @@ class VGGModel(tf.keras.Model):
             Dropout(0.1),
             Dense(2, activation='softmax') #2 classes = real or fake
         ]
-        # self.head = [
-        #       Flatten(),
-        #       Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.1)),
-        #       BatchNormalization(),
-        #       Dropout(0.1),
-        #       Dense(15, activation='softmax')
-        # ]
 
         self.vgg16 = tf.keras.Sequential(self.vgg16, name="vgg_base")
         self.head = tf.keras.Sequential(self.head, name="vgg_head")
