@@ -3,17 +3,29 @@ import sys
 import argparse
 from datetime import datetime
 import tensorflow as tf
+import re
 
 import hyperparameters as hp
 from model import VGGModel
-from preprocess_playground import Datasets
-# from tensorboard_utils import \
-#         ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
+from data_augment import Datasets
+from tensorboard_utils import \
+        ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
 
 from matplotlib import pyplot as plt
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+""" 
+Continue training from a save: python3 main.py --load-checkpoint {path to h5 file in checkpoints/vgg_model/your model number}
+Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.weights.e000-acc0.5924.h5
+Notes: 
+- continues from epoch you left off on
+- automatically saves checkpoint from epochs that produce a higher accuracy
+
+Evaluate test data from a save:
+Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.weights.e000-acc0.5924.h5 --evaluate
+"""
 
 def parse_args():
     """ Perform command-line argument parsing. """
@@ -35,13 +47,13 @@ def parse_args():
         '--load-vgg',
         default='vgg16_imagenet.h5',
         help='''Path to pre-trained VGG-16 file.''')
-    # parser.add_argument(
-    #     '--load-checkpoint',
-    #     default=None,
-    #     help='''Path to model checkpoint file (should end with the
-    #     extension .h5). Checkpoints are automatically saved when you
-    #     train your model. If you want to continue training from where
-    #     you left off, this is how you would load your weights.''')
+    parser.add_argument(
+        '--load-checkpoint',
+        default=None,
+        help='''Path to model checkpoint file (should end with the
+        extension .h5). Checkpoints are automatically saved when you
+        train your model. If you want to continue training from where
+        you left off, this is how you would load your weights.''')
     parser.add_argument(
         '--confusion',
         action='store_true',
@@ -57,6 +69,8 @@ def parse_args():
 
     return parser.parse_args()
 
+
+
 def train(model, datasets, checkpoint_path, logs_path, init_epoch):
     """ Training routine. """
     
@@ -64,22 +78,22 @@ def train(model, datasets, checkpoint_path, logs_path, init_epoch):
     callback_list = [
         tf.keras.callbacks.TensorBoard(
             log_dir=logs_path,
-            update_freq='batch',
-            profile_batch=0)
-        # ImageLabelingLogger(logs_path, datasets),
-        # CustomModelSaver(checkpoint_path, ARGS.task, hp.max_num_weights)
+            update_freq='epoch',
+            profile_batch=0),
+        ImageLabelingLogger(logs_path, datasets),
+        CustomModelSaver(checkpoint_path, 3, hp.max_num_weights)
     ]
 
     # Include confusion logger in callbacks if flag set
-    # if ARGS.confusion:
-        # callback_list.append(ConfusionMatrixLogger(logs_path, datasets))
+    if ARGS.confusion:
+        callback_list.append(ConfusionMatrixLogger(logs_path, datasets))
 
     # Begin training
     model.fit(
         x=datasets.train_data,
         validation_data=datasets.test_data,
         epochs=hp.num_epochs,
-        batch_size=None,            # Required as None as we use an ImageDataGenerator; see preprocess.py get_data()
+        batch_size=None,            # Required as None as we use an ImageDataGenerator; see data_augment.py get_data()
         callbacks=callback_list,
         initial_epoch=init_epoch,
     )
@@ -101,6 +115,16 @@ def main():
     time_now = datetime.now()
     timestamp = time_now.strftime("%m%d%y-%H%M%S")
     init_epoch = 0
+    
+    # If loading from a checkpoint, the loaded checkpoint's directory
+    # will be used for future checkpoints
+    if ARGS.load_checkpoint is not None:
+        ARGS.load_checkpoint = os.path.abspath(ARGS.load_checkpoint)
+
+        # Get timestamp and epoch from filename
+        regex = r"(?:.+)(?:\.e)(\d+)(?:.+)(?:.h5)"
+        init_epoch = int(re.match(regex, ARGS.load_checkpoint).group(1)) + 1
+        timestamp = os.path.basename(os.path.dirname(ARGS.load_checkpoint))
 
 
     # If paths provided by program arguments are accurate, then this will
@@ -118,9 +142,9 @@ def main():
     
     
     model = VGGModel()
-    # checkpoint_path = "checkpoints" + os.sep + \
-    #     "vgg_model" + os.sep + timestamp + os.sep
-    checkpoint_path = "Checkpoints not implemented"
+    checkpoint_path = "checkpoints" + os.sep + \
+        "vgg_model" + os.sep + timestamp + os.sep
+    
     logs_path = "logs" + os.sep + "vgg_model" + \
         os.sep + timestamp + os.sep
     model(tf.keras.Input(shape=(224, 224, 3)))
@@ -132,16 +156,13 @@ def main():
     # Load base of VGG model
     model.vgg16.load_weights(ARGS.load_vgg, by_name=True)
 
-    # # Load checkpoints
-    # if ARGS.load_checkpoint is not None:
-    #     if ARGS.task == '1':
-    #         model.load_weights(ARGS.load_checkpoint, by_name=False)
-    #     else:
-    #         model.head.load_weights(ARGS.load_checkpoint, by_name=False)
+    # Load checkpoints
+    if ARGS.load_checkpoint is not None: 
+        model.head.load_weights(ARGS.load_checkpoint, by_name=False)
 
-    # # Make checkpoint directory if needed
-    # if not ARGS.evaluate and not os.path.exists(checkpoint_path):
-    #     os.makedirs(checkpoint_path)
+    # Make checkpoint directory if needed
+    if not ARGS.evaluate and not os.path.exists(checkpoint_path):
+        os.makedirs(checkpoint_path)
 
     # Compile model graph
     
