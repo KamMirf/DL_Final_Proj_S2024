@@ -9,7 +9,7 @@ Number of epochs. We as you to use only 50 epochs as your budget.
 For extra credit, if you experiment with more complex networks, you
 can change this.
 """
-num_epochs = 50
+num_epochs = 20
 
 """
 A critical parameter that can dramatically affect whether training

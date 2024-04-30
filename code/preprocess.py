@@ -129,16 +129,9 @@ def extract_faces(video_path, output_path, scale=1.3, minsize=None, frame_skip=5
     print(f'Finished processing {video_path}')  # Print completion message
 
 def split_data(data_dir, test_size=0.2):
-    """
-    Notes:
-    Randomization: train_test_split function shuffles the data by default 
-                   before splitting (unless the shuffle parameter is explicitly 
-                   set to False)
-    Stratification: The stratify=labels parameter ensures that both training 
-                    and testing datasets have approximately the same percentage 
-                    of samples of each target class as the complete set
-    """
-    # Ensure that the correct directories are referenced
+    print(f"Preparing to split data in {data_dir} with a test size of {test_size*100}%")
+    
+    # Directories for deepfake and original images
     deepfake_dir = os.path.join(data_dir, 'deepfake_cropped')
     original_dir = os.path.join(data_dir, 'original_cropped')
 
@@ -150,7 +143,7 @@ def split_data(data_dir, test_size=0.2):
     # Collect all deepfake and original images
     deepfake_images = [os.path.join(deepfake_dir, f) for f in os.listdir(deepfake_dir) if f.endswith('.jpg')]
     original_images = [os.path.join(original_dir, f) for f in os.listdir(original_dir) if f.endswith('.jpg')]
-
+    print(f"Found {len(deepfake_images)} deepfake and {len(original_images)} original images.")
 
     # Create labels: 1 for deepfake, 0 for original
     labels = [1] * len(deepfake_images) + [0] * len(original_images)
@@ -158,19 +151,28 @@ def split_data(data_dir, test_size=0.2):
 
     # Split data into training and test sets
     train_images, test_images, train_labels, test_labels = train_test_split(
-        all_images, labels, test_size=test_size, stratify=labels)
+        all_images, labels, test_size=test_size)
+    print("Total labels:", len(labels))
+    print("Training labels count:", len(train_labels), "Training deepfake count:", train_labels.count(1))
+    print("Testing labels count:", len(test_labels), "Testing deepfake count:", test_labels.count(1))
 
     # Create directories for the train/test datasets
     train_dir = os.path.join(data_dir, 'train')
     test_dir = os.path.join(data_dir, 'test')
-    os.makedirs(train_dir, exist_ok=True)
-    os.makedirs(test_dir, exist_ok=True)
+    if not os.path.exists(train_dir):
+        os.makedirs(train_dir)
+        print(f"Created directory {train_dir}")
+    if not os.path.exists(test_dir):
+        os.makedirs(test_dir)
+        print(f"Created directory {test_dir}")
 
     # Function to copy files to new training/testing directories
     def copy_files(files, labels, dest_dir):
         for file_path, label in zip(files, labels):
             label_dir = os.path.join(dest_dir, 'deepfake' if label == 1 else 'original')
-            os.makedirs(label_dir, exist_ok=True)
+            if not os.path.exists(label_dir):
+                os.makedirs(label_dir)
+                print(f"Created label directory {label_dir}")
             shutil.copy(file_path, label_dir)
 
     # Copy the split files into their respective directories
@@ -204,6 +206,11 @@ if __name__ == '__main__':
     Splitting Test and Train data (Optional):
     After processing both original and deepfake videos, run:
     python3 preprocess.py --data_dir ../cropped_data --split_data
+
+
+    ############# FULL DATA SET PREPROCESS ###############
+    python3 preprocess.py --video_path ../data/original_sequences/actors/c23/videos --output_path ../cropped_data/original_cropped --frame_skip 100
+    python3 preprocess.py --video_path ../data/manipulated_sequences/DeepFakeDetection/c23/videos --output_path ../cropped_data/deepfake_cropped --frame_skip 100
     """
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--video_path', '-i', type=str, help='Path to the video directory or a single video file')
@@ -231,5 +238,8 @@ if __name__ == '__main__':
     # Optionally split the data if the flag is set and data_dir is provided
     if args.split_data and args.data_dir:
         print("Splitting the data into training and testing sets...")
-        split_data(args.data_dir, test_size=0.5)
+        split_data(args.data_dir)
         print("Data splitting complete.")
+
+
+#find videos -maxdepth 1 -type f | wc -l

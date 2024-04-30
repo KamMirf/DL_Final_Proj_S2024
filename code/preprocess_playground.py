@@ -94,7 +94,7 @@ class Datasets():
         # Setup data generators
         # These feed data to the training and testing routine based on the dataset
         self.train_data = self.get_data(
-            os.path.join(self.data_path, "train/"), task == '3', True, True)
+            os.path.join(self.data_path, "train/"), task == '3', True, False)
         self.test_data = self.get_data(
             os.path.join(self.data_path, "test/"), task == '3', False, False)
 
@@ -217,7 +217,7 @@ class Datasets():
 
         if augment:
 
-            data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
+            """data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
                 preprocessing_function=self.preprocess_fn
                 , 
                 rotation_range=3, 
@@ -225,7 +225,7 @@ class Datasets():
                 height_shift_range=0.15,
                 zoom_range=0.10,
                 horizontal_flip=True
-                )
+                )"""
 
         else:
             # Don't modify this
