@@ -4,4 +4,6 @@ filtered_data/
 code/vgg16_imagenet.h5
 cropped_data
 code/logs
+code/checkpoints
+code/misclassified
 

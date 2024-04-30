@@ -231,5 +231,5 @@ if __name__ == '__main__':
     # Optionally split the data if the flag is set and data_dir is provided
     if args.split_data and args.data_dir:
         print("Splitting the data into training and testing sets...")
-        split_data(args.data_dir, test_size=0.5)
+        split_data(args.data_dir)
         print("Data splitting complete.")
