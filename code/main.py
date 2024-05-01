@@ -35,13 +35,24 @@ Also works with URLs:
 Ex. python3 main.py --predict https://www.example.com/image.jpg
 Can be used with --load-checkpoint to predict on a model from a save
 Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/050124-152146/vgg.e003-acc0.7666.weights.h5 --predict ../cropped_data/test/deepfake/01_02__meeting_serious__YVGY8LOK_frame_0_face_0.jpg
+
+    Using these weights: checkpoints/vgg_model/050124-162234/vgg.e006-acc0.7956.weights.h5 (trained 8 epochs on limited, unbalanced data)
     
-    (fake) https://trekmovie.com/wp-content/uploads/2018/02/niccagepicard-deepfake-head1.jpg
-    (real) https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg 
-    (real) https://t4.ftcdn.net/jpg/00/76/27/53/360_F_76275384_mRNrmAI89UPWoWeUJfCL9CptRxg3cEoF.jpg
-    checkpoints/vgg_model/050124-162234/vgg.e006-acc0.7956.weights.h5
+    (fake) https://trekmovie.com/wp-content/uploads/2018/02/niccagepicard-deepfake-head1.jpg --> predicted real
+    (real) https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg --> predicted fake
+    (real) https://t4.ftcdn.net/jpg/00/76/27/53/360_F_76275384_mRNrmAI89UPWoWeUJfCL9CptRxg3cEoF.jpg --> predicted fake
+    (fake) https://interactive.guim.co.uk/atoms/june-2019-deep-fake/v/1561391108030/assets/cage-2.jpg --> predicted real
+    (fake) https://www.digitaltrends.com/wp-content/uploads/2019/07/ctrl-shift-face-deepfake-changing-hollywood-history-feat.jpg --> predicted fake
+    (real) https://assets.bwbx.io/images/users/iqjWHBFdfxIU/iZN4UhACURU4/v0/-1x-1.jpg --> predicted fake
     
-    python3 main.py --load-checkpoint checkpoints/vgg_model/050124-162234/vgg.e006-acc0.7956.weights.h5 --predict 
+    (fake) ../cropped_data/deepfake_cropped/01_03__talking_against_wall__JZUXXFRB_frame_300_face_0.jpg --> predicted real
+    (fake) ../cropped_data/deepfake_cropped/02_07__hugging_happy__1JCLEEBQ_frame_500_face_0.jpg --> predicted real
+    (real) ../cropped_data/original_cropped/01__walking_down_street_outside_angry_frame_400_face_0.jpg --> predicted fake
+    (real) ../cropped_data/original_cropped/06__kitchen_pan_frame_200_face_0.jpg --> predicted fake
+    (fake) ../cropped_data/deepfake_cropped/05_08__talking_against_wall__PRBCE28Z_frame_300_face_0.jpg --> predicted fake
+    (real) ../cropped_data/original_cropped/09__talking_against_wall_frame_200_face_0.jpg --> predicted fake
+    
+    python3 main.py --load-checkpoint checkpoints/vgg_model/050124-162234/vgg.e006-acc0.7956.weights.h5 --predict ../cropped_data/original_cropped/09__talking_against_wall_frame_200_face_0.jpg
 """
 
 def parse_args():
