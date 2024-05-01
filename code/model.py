@@ -7,7 +7,9 @@ from keras import losses
 from keras import optimizers
 from keras import regularizers
 
+"""VGG CNN pretrained on ImageNet"""
 class VGGModel(tf.keras.Model):
+       
     def __init__(self):
         super(VGGModel, self).__init__()
 
@@ -52,10 +54,11 @@ class VGGModel(tf.keras.Model):
             MaxPool2D(2, name="block5_pool")
         ]
 
+        #set VGG layers to untrainable because we use pretrained weights
         for layer in self.vgg16:
                layer.trainable = False
 
-
+       #custom head to predict real or fake
         self.head = [
             Flatten(),
             Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.01)),

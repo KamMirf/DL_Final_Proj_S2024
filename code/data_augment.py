@@ -48,18 +48,6 @@ if __name__ == "__main__":
 ###########################################################################################################################
 ###########################################################################################################################
 
-
-
-
-
-
-
-
-
-
-
-############———CV Code———################
-
 import os
 import random
 import numpy as np
@@ -228,7 +216,6 @@ class Datasets():
                 )"""
 
         else:
-            # Don't modify this
             data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
                 preprocessing_function=self.preprocess_fn)
 
