@@ -207,9 +207,9 @@ def main():
         img = tf.expand_dims(img, axis=0)
         prediction = model.predict(img)
         if prediction[0][0] > prediction[0][1]:
-            print("Model Prediction: Fake")
-        else:
             print("Model Prediction: Real")
+        else:
+            print("Model Prediction: Fake")
     elif ARGS.evaluate:
         test(model, datasets.test_data)
     else:
