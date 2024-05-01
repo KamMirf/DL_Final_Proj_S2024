@@ -26,6 +26,13 @@ Notes:
 
 Evaluate test data from a save:
 Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.weights.e000-acc0.5924.h5 --evaluate
+
+Predict on a single image:
+python3 main.py --predict {path to image}
+Ex. python3 main.py --predict ../data/real_and_fake_face/split_data/test/real/real_00001.jpg
+Also works with URLs:
+Ex. python3 main.py --predict https://www.example.com/image.jpg
+Can be used with --load-checkpoint to predict on a model from a save
 """
 
 def parse_args():
