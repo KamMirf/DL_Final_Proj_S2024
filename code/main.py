@@ -6,6 +6,7 @@ import requests
 import tensorflow as tf
 import re
 
+from preprocess import extract_single_face
 import hyperparameters as hp
 from model import VGGModel
 from data_augment import Datasets
@@ -191,10 +192,16 @@ def main():
         # Load image and make prediction
         if ARGS.predict.startswith("http"):
             img = requests.get(ARGS.predict, headers={'User-Agent': 'Mozilla/5.0'}).content
+            img_path = "temp.jpg"
+            with open(img_path, 'wb') as f:
+                f.write(img)
         else:
-            img = tf.io.read_file(ARGS.predict)
+            img_path = ARGS.predict
+        img_path = extract_single_face(img_path)
+        img = tf.io.read_file(img_path)
+        if ARGS.predict.startswith("http"):
+            os.remove(img_path) # Remove temp file
         img = tf.image.decode_jpeg(img, channels=3)
-        img = tf.image.resize(img, (224, 224))
         img = tf.expand_dims(img, axis=0)
         prediction = model.predict(img)
         if prediction[0][0] > prediction[0][1]:

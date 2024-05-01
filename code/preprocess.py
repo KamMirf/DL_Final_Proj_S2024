@@ -8,7 +8,7 @@ python preprocess.py
     -o <path to output folder, will write one or multiple output videos there>
 
 Original Author: Andreas Rössler
-Editied and modified: Jason Pien & Joey Ricciardulli
+Editied and modified: Jason Pien, Joey Ricciardulli, and Alex Wick
 """
 
 
@@ -127,6 +127,65 @@ def extract_faces(video_path, output_path, scale=1.3, minsize=None, frame_skip=5
     pbar.close()  # Close the progress bar when all frames are processed
     reader.release()  # Release the video file
     print(f'Finished processing {video_path}')  # Print completion message
+
+def extract_single_face(image_path: str, scale=1.3, minsize=None, target_size=(224,224)):
+    """
+    A variant of extract_faces that processes a single image instead of a video.
+    """
+    face_detector = dlib.get_frontal_face_detector()  # Initialize the face detector from dlib
+    predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")  # Pretrained facial landmark detector
+
+    image = cv2.imread(image_path)  # Read the image
+    cv2.imshow("Original Image", image)
+    print("Press any key to continue...")
+    cv2.waitKey(0)
+    print("Continuing...")
+    cv2.destroyAllWindows()
+    height, width = image.shape[:2]  # Get dimensions of the frame
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # Convert the frame to grayscale for face detection
+    faces = face_detector(gray, 1)  # Detect faces in the grayscale image
+
+    face = faces[0]  # Assume the first face is the correct one
+    landmarks = predictor(gray, face)
+
+    nose_point = landmarks.part(33).x, landmarks.part(33).y
+    left_eye = landmarks.part(36).x, landmarks.part(36).y
+    right_eye = landmarks.part(45).x, landmarks.part(45).y
+
+    # Calculate the angle to rotate the face to be aligned
+    dY = right_eye[1] - left_eye[1]
+    dX = right_eye[0] - left_eye[0]
+    angle = np.degrees(np.arctan2(dY, dX))
+    
+    # Calculate the center of the face
+    eyes_center = ((left_eye[0] + right_eye[0]) // 2, (left_eye[1] + right_eye[1]) // 2)
+
+    # Align the face
+    M = cv2.getRotationMatrix2D(eyes_center, angle, 1)
+    aligned_face = cv2.warpAffine(image, M, (image.shape[1], image.shape[0]))
+
+    h, w = aligned_face.shape[:2]
+    center_of_image = (w // 2, h // 2)
+    shift_x = center_of_image[0] - nose_point[0]
+    shift_y = center_of_image[1] - nose_point[1]
+
+    # Translation matrix
+    M = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
+    centered_face = cv2.warpAffine(aligned_face, M, (w, h))
+
+    # Detect faces in the grayscale image
+    gray2 = cv2.cvtColor(centered_face, cv2.COLOR_BGR2GRAY)
+    faces2 = face_detector(gray2, 1)
+
+    face2 = faces2[0] # Assume the first face is the correct one
+    x, y, size = get_boundingbox(face2, width, height, scale=scale, minsize=minsize)  # Calculate bounding box
+    cropped_face = centered_face[y:y+size, x:x+size]  # Crop the face from the image
+    resized_face = cv2.resize(cropped_face, target_size)
+    cv2.imwrite(image_path, resized_face)  # Save the cropped face image
+    cv2.imshow("Cropped Face", resized_face)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    return image_path
 
 def split_data(data_dir, test_size=0.2):
     print(f"Preparing to split data in {data_dir} with a test size of {test_size*100}%")
