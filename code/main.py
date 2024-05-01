@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 from datetime import datetime
+import requests
 import tensorflow as tf
 import re
 
@@ -66,6 +67,13 @@ def parse_args():
         help='''Skips training and evaluates on the test set once.
         You can use this to test an already trained model by loading
         its checkpoint.''')
+    parser.add_argument(
+        '--predict',
+        default=None,
+        help='''Path to an image file to predict on. If this is
+        provided, the model will load the checkpoint and make a
+        prediction on the image.'''
+    )
 
     return parser.parse_args()
 
@@ -139,7 +147,7 @@ def main():
     os.chdir(sys.path[0])
     print("ARGS data: " + ARGS.data) 
     datasets = Datasets(ARGS.data, 3)
-    
+
     
     model = VGGModel()
     checkpoint_path = "checkpoints" + os.sep + \
@@ -150,8 +158,9 @@ def main():
     model(tf.keras.Input(shape=(224, 224, 3)))
 
     # Print summaries for both parts of the model
-    model.vgg16.summary()
-    model.head.summary()
+    if not ARGS.predict: # Don't print summaries if just predicting on an image
+        model.vgg16.summary()
+        model.head.summary()
 
     # Load base of VGG model
     model.vgg16.load_weights(ARGS.load_vgg, by_name=True)
@@ -171,7 +180,21 @@ def main():
         loss=model.loss_fn,
         metrics=["sparse_categorical_accuracy"])
     
-    if ARGS.evaluate:
+    if ARGS.predict:
+        # Load image and make prediction
+        if ARGS.predict.startswith("http"):
+            img = requests.get(ARGS.predict, headers={'User-Agent': 'Mozilla/5.0'}).content
+        else:
+            img = tf.io.read_file(ARGS.predict)
+        img = tf.image.decode_jpeg(img, channels=3)
+        img = tf.image.resize(img, (224, 224))
+        img = tf.expand_dims(img, axis=0)
+        prediction = model.predict(img)
+        if prediction[0][0] > prediction[0][1]:
+            print("Model Prediction: Real")
+        else:
+            print("Model Prediction: Fake")
+    elif ARGS.evaluate:
         test(model, datasets.test_data)
     else:
         print("training")
