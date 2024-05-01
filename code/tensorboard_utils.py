@@ -218,21 +218,14 @@ class CustomModelSaver(tf.keras.callbacks.Callback):
             save_name = "e{0:03d}-acc{1:.4f}.weights.h5".format(
                 epoch, cur_acc)
 
-            # if self.task == '1':
-            #     save_location = self.checkpoint_dir + os.sep + "your." + save_name
-            #     print(("\nEpoch {0:03d} TEST accuracy ({1:.4f}) EXCEEDED previous "
-            #            "maximum TEST accuracy.\nSaving checkpoint at {location}")
-            #            .format(epoch + 1, cur_acc, location = save_location))
-            #     self.model.save_weights(save_location)
-            # else:
-            # save_location = self.checkpoint_dir + os.sep + "vgg." + save_name
+            # save_location = self.checkpoint_dir + os.sep + "vgg." + save_name //original save_location before tf keras update
             save_location = self.checkpoint_dir + "vgg." + save_name
             print(("\nEpoch {0:03d} TEST accuracy ({1:.4f}) EXCEEDED previous "
                     "maximum TEST accuracy.\nSaving checkpoint at {location}")
                     .format(epoch + 1, cur_acc, location = save_location))
             # Only save weights of classification head of VGGModel
             self.model.head.save_weights(save_location)
-#code/checkpoints/vgg_model/050124-152146/vgg.e000-acc0.7091.weights.h5
+#
             # Ensure max_num_weights is not exceeded by removing
             # minimum weight
             if self.max_num_weights > 0 and \

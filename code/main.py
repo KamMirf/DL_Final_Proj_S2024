@@ -20,13 +20,13 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 """ 
 Continue training from a save: python3 main.py --load-checkpoint {path to h5 file in checkpoints/vgg_model/your model number}
-Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.weights.e000-acc0.5924.h5
+Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.e000-acc0.5924.weights.h5
 Notes: 
 - continues from epoch you left off on
 - automatically saves checkpoint from epochs that produce a higher accuracy
 
 Evaluate test data from a save:
-Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.weights.e000-acc0.5924.h5 --evaluate
+Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.e000-acc0.5924.weights.h5 --evaluate
 
 Predict on a single image:
 python3 main.py --predict {path to image}
@@ -34,6 +34,8 @@ Ex. python3 main.py --predict ../data/real_and_fake_face/split_data/test/real/re
 Also works with URLs:
 Ex. python3 main.py --predict https://www.example.com/image.jpg
 Can be used with --load-checkpoint to predict on a model from a save
+Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/050124-152146/vgg.e003-acc0.7666.weights.h5 --predict ../cropped_data/test/deepfake/01_02__meeting_serious__YVGY8LOK_frame_0_face_0.jpg
+    python3 main.py --load-checkpoint ../weights/vgg.e005-acc0.9146.weights.h5 --predict ../cropped_data/test/deepfake/01_02__meeting_serious__YVGY8LOK_frame_0_face_0.jpg
 """
 
 def parse_args():
