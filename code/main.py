@@ -36,7 +36,12 @@ Ex. python3 main.py --predict https://www.example.com/image.jpg
 Can be used with --load-checkpoint to predict on a model from a save
 Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/050124-152146/vgg.e003-acc0.7666.weights.h5 --predict ../cropped_data/test/deepfake/01_02__meeting_serious__YVGY8LOK_frame_0_face_0.jpg
     
-    https://trekmovie.com/wp-content/uploads/2018/02/niccagepicard-deepfake-head1.jpg
+    (fake) https://trekmovie.com/wp-content/uploads/2018/02/niccagepicard-deepfake-head1.jpg
+    (real) https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg 
+    (real) https://t4.ftcdn.net/jpg/00/76/27/53/360_F_76275384_mRNrmAI89UPWoWeUJfCL9CptRxg3cEoF.jpg
+    checkpoints/vgg_model/050124-162234/vgg.e006-acc0.7956.weights.h5
+    
+    python3 main.py --load-checkpoint checkpoints/vgg_model/050124-162234/vgg.e006-acc0.7956.weights.h5 --predict 
 """
 
 def parse_args():
@@ -202,9 +207,9 @@ def main():
         img = tf.expand_dims(img, axis=0)
         prediction = model.predict(img)
         if prediction[0][0] > prediction[0][1]:
-            print("Model Prediction: Real")
-        else:
             print("Model Prediction: Fake")
+        else:
+            print("Model Prediction: Real")
     elif ARGS.evaluate:
         test(model, datasets.test_data)
     else:
