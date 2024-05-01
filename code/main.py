@@ -35,7 +35,8 @@ Also works with URLs:
 Ex. python3 main.py --predict https://www.example.com/image.jpg
 Can be used with --load-checkpoint to predict on a model from a save
 Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/050124-152146/vgg.e003-acc0.7666.weights.h5 --predict ../cropped_data/test/deepfake/01_02__meeting_serious__YVGY8LOK_frame_0_face_0.jpg
-    python3 main.py --load-checkpoint ../weights/vgg.e005-acc0.9146.weights.h5 --predict ../cropped_data/test/deepfake/01_02__meeting_serious__YVGY8LOK_frame_0_face_0.jpg
+    
+    https://trekmovie.com/wp-content/uploads/2018/02/niccagepicard-deepfake-head1.jpg
 """
 
 def parse_args():
@@ -156,8 +157,6 @@ def main():
     model = VGGModel()
     checkpoint_path = "checkpoints" + os.sep + \
         "vgg_model" + os.sep + timestamp + os.sep
-        
-    print(("Checkpoint path: {location}").format(location=checkpoint_path))
     
     logs_path = "logs" + os.sep + "vgg_model" + \
         os.sep + timestamp + os.sep
