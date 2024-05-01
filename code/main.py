@@ -154,6 +154,8 @@ def main():
     model = VGGModel()
     checkpoint_path = "checkpoints" + os.sep + \
         "vgg_model" + os.sep + timestamp + os.sep
+        
+    print(("Checkpoint path: {location}").format(location=checkpoint_path))
     
     logs_path = "logs" + os.sep + "vgg_model" + \
         os.sep + timestamp + os.sep
@@ -169,7 +171,7 @@ def main():
 
     # Load checkpoints
     if ARGS.load_checkpoint is not None: 
-        model.head.load_weights(ARGS.load_checkpoint, by_name=False)
+        model.head.load_weights(ARGS.load_checkpoint)
 
     # Make checkpoint directory if needed
     if not ARGS.evaluate and not os.path.exists(checkpoint_path):

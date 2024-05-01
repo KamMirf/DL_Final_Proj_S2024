@@ -6,6 +6,7 @@ cropped_data
 code/logs
 code/checkpoints
 code/misclassified
+cropped_data/
 .conda
 __pycache__
 even_represented_data
