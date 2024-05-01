@@ -181,11 +181,19 @@ def extract_single_face(image_path: str, scale=1.3, minsize=None, target_size=(2
     x, y, size = get_boundingbox(face2, width, height, scale=scale, minsize=minsize)  # Calculate bounding box
     cropped_face = centered_face[y:y+size, x:x+size]  # Crop the face from the image
     resized_face = cv2.resize(cropped_face, target_size)
-    cv2.imwrite(image_path, resized_face)  # Save the cropped face image
+    if image_path.endswith('.jpg'):
+        new_path = image_path.replace('.jpg', '_cropped.jpg')
+    elif image_path.endswith('.png'):
+        new_path = image_path.replace('.png', '_cropped.jpg')
+    elif image_path.endswith('.jpeg'):
+        new_path = image_path.replace('.jpeg', '_cropped.jpg')
+    else:
+        new_path = image_path + '_cropped.jpg'
+    cv2.imwrite(new_path, resized_face)  # Save the cropped face image
     cv2.imshow("Cropped Face", resized_face)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    return image_path
+    return new_path
 
 def split_data(data_dir, test_size=0.2):
     print(f"Preparing to split data in {data_dir} with a test size of {test_size*100}%")

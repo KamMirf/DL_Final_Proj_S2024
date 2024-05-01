@@ -20,13 +20,13 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 """ 
 Continue training from a save: python3 main.py --load-checkpoint {path to h5 file in checkpoints/vgg_model/your model number}
-Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.e000-acc0.5924.weights.h5
+Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.weights.e000-acc0.5924.h5
 Notes: 
 - continues from epoch you left off on
 - automatically saves checkpoint from epochs that produce a higher accuracy
 
 Evaluate test data from a save:
-Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.e000-acc0.5924.weights.h5 --evaluate
+Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.weights.e000-acc0.5924.h5 --evaluate
 
 Predict on a single image:
 python3 main.py --predict {path to image}
@@ -34,25 +34,6 @@ Ex. python3 main.py --predict ../data/real_and_fake_face/split_data/test/real/re
 Also works with URLs:
 Ex. python3 main.py --predict https://www.example.com/image.jpg
 Can be used with --load-checkpoint to predict on a model from a save
-Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/050124-152146/vgg.e003-acc0.7666.weights.h5 --predict ../cropped_data/test/deepfake/01_02__meeting_serious__YVGY8LOK_frame_0_face_0.jpg
-
-    Using these weights: checkpoints/vgg_model/050124-162234/vgg.e006-acc0.7956.weights.h5 (trained 8 epochs on limited, unbalanced data)
-    
-    (fake) https://trekmovie.com/wp-content/uploads/2018/02/niccagepicard-deepfake-head1.jpg --> predicted real
-    (real) https://img.freepik.com/free-photo/portrait-white-man-isolated_53876-40306.jpg --> predicted fake
-    (real) https://t4.ftcdn.net/jpg/00/76/27/53/360_F_76275384_mRNrmAI89UPWoWeUJfCL9CptRxg3cEoF.jpg --> predicted fake
-    (fake) https://interactive.guim.co.uk/atoms/june-2019-deep-fake/v/1561391108030/assets/cage-2.jpg --> predicted real
-    (fake) https://www.digitaltrends.com/wp-content/uploads/2019/07/ctrl-shift-face-deepfake-changing-hollywood-history-feat.jpg --> predicted fake
-    (real) https://assets.bwbx.io/images/users/iqjWHBFdfxIU/iZN4UhACURU4/v0/-1x-1.jpg --> predicted fake
-    
-    (fake) ../cropped_data/deepfake_cropped/01_03__talking_against_wall__JZUXXFRB_frame_300_face_0.jpg --> predicted real
-    (fake) ../cropped_data/deepfake_cropped/02_07__hugging_happy__1JCLEEBQ_frame_500_face_0.jpg --> predicted real
-    (real) ../cropped_data/original_cropped/01__walking_down_street_outside_angry_frame_400_face_0.jpg --> predicted fake
-    (real) ../cropped_data/original_cropped/06__kitchen_pan_frame_200_face_0.jpg --> predicted fake
-    (fake) ../cropped_data/deepfake_cropped/05_08__talking_against_wall__PRBCE28Z_frame_300_face_0.jpg --> predicted fake
-    (real) ../cropped_data/original_cropped/09__talking_against_wall_frame_200_face_0.jpg --> predicted fake
-    
-    python3 main.py --load-checkpoint checkpoints/vgg_model/050124-162234/vgg.e006-acc0.7956.weights.h5 --predict ../cropped_data/original_cropped/09__talking_against_wall_frame_200_face_0.jpg
 """
 
 def parse_args():
@@ -61,6 +42,12 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Let's train some neural nets!",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    # parser.add_argument(
+    #     '--task',
+    #     required=True,
+    #     choices=['1', '3'],
+    #     help='''Which task of the assignment to run -
+    #     training from scratch (1), or fine tuning VGG-16 (3).''')
     parser.add_argument(
         '--data',
         default='..'+os.sep+'cropped_data'+os.sep,
@@ -188,7 +175,7 @@ def main():
 
     # Load checkpoints
     if ARGS.load_checkpoint is not None: 
-        model.head.load_weights(ARGS.load_checkpoint)
+        model.head.load_weights(ARGS.load_checkpoint, by_name=False)
 
     # Make checkpoint directory if needed
     if not ARGS.evaluate and not os.path.exists(checkpoint_path):
@@ -210,10 +197,11 @@ def main():
                 f.write(img)
         else:
             img_path = ARGS.predict
-        img_path = extract_single_face(img_path)
-        img = tf.io.read_file(img_path)
+        new_path = extract_single_face(img_path)
+        img = tf.io.read_file(new_path)
         if ARGS.predict.startswith("http"):
-            os.remove(img_path) # Remove temp file
+            os.remove(img_path) # Remove original temp file for URL
+        os.remove(new_path) # Remove temp file
         img = tf.image.decode_jpeg(img, channels=3)
         img = tf.expand_dims(img, axis=0)
         prediction = model.predict(img)
