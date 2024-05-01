@@ -6,4 +6,5 @@ cropped_data
 code/logs
 code/checkpoints
 code/misclassified
-
+.conda
+__pycache__

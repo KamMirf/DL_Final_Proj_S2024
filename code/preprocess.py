@@ -14,7 +14,7 @@ Editied and modified: Jason Pien & Joey Ricciardulli
 
 import os
 import argparse
-import cv2  #conda install -c conda-forge opencv        Then conda install cv2\
+import cv2  #conda install -c conda-forge opencv        Then conda install cv2
 import dlib #conda install -c conda-forge dlib
 from os.path import join
 from tqdm import tqdm
