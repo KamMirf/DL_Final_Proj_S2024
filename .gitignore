@@ -7,8 +7,10 @@ code/logs
 code/checkpoints
 code/misclassified
 cropped_data/
+cropped_data_Celeb/
 lime_explainer_images
 .conda
 __pycache__
 even_represented_data
 outside_data_test
+Celeb-DF-v2
