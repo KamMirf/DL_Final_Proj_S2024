@@ -156,12 +156,19 @@ class Datasets():
 
 
         return img
+    
+    def add_noise(self, img):
+        noise_factor = 0.1
+        noise = np.random.randn(*img.shape)
+        img_noisy = img + noise_factor * noise
+        return np.clip(img_noisy, 0.0, 255.0)
 
     def preprocess_fn(self, img):
         """ Preprocess function for ImageDataGenerator. """
 
         if self.task == '3':
             img = tf.keras.applications.vgg16.preprocess_input(img)
+            img = self.add_noise(img)
         else:
             img = img / 255.
             img = self.standardize(img)

@@ -43,6 +43,9 @@ LIME:
 python main.py --evaluate --lime-image ../cropped_data/test/deepfake/01_02__outside_talking_still_laughing__YVGY8LOK_frame_300_face_0.jpg
 - without --load-checkpoint, I don't think it has any weights for the head, but note that loading weights from anything but the last epoch
 will require the model to continue to train the rest of the epochs it has left before evaluating and then doing lime
+
+
+python3 main.py --load-checkpoint {path} --lime-image {path}
 """
 
 def parse_args():
