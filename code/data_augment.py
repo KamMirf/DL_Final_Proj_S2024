@@ -82,7 +82,7 @@ class Datasets():
         # Setup data generators
         # These feed data to the training and testing routine based on the dataset
         self.train_data = self.get_data(
-            os.path.join(self.data_path, "train/"), task == '3', True, False)
+            os.path.join(self.data_path, "train/"), task == '3', True, True)
         self.test_data = self.get_data(
             os.path.join(self.data_path, "test/"), task == '3', False, False)
 
@@ -167,24 +167,6 @@ class Datasets():
             img = self.standardize(img)
         return img
 
-    def custom_preprocess_fn(self, img):
-        """ Custom preprocess function for ImageDataGenerator. """
-
-        if self.task == '3':
-            img = tf.keras.applications.vgg16.preprocess_input(img)
-        else:
-            img = img / 255.
-            img = self.standardize(img)
-
-
-        if random.random() < 0.3:
-            img = img + tf.random.uniform(
-                (hp.img_size, hp.img_size, 1),
-                minval=-0.1,
-                maxval=0.1)
-
-        return img
-
     def get_data(self, path, is_vgg, shuffle, augment):
         """ Returns an image data generator which can be iterated
         through for images and corresponding class labels.
@@ -205,15 +187,16 @@ class Datasets():
 
         if augment:
 
-            """data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
+            data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
                 preprocessing_function=self.preprocess_fn
                 , 
-                rotation_range=3, 
-                width_shift_range=0.15, 
-                height_shift_range=0.15,
-                zoom_range=0.10,
-                horizontal_flip=True
-                )"""
+                brightness_range=[0.8, 1.2],
+                # rotation_range=3, 
+                # width_shift_range=0.15, 
+                # height_shift_range=0.15,
+                # zoom_range=0.10,
+                # horizontal_flip=True
+                )
 
         else:
             data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
