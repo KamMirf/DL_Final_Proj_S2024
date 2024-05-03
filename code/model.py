@@ -61,11 +61,13 @@ class VGGModel(tf.keras.Model):
        #custom head to predict real or fake
         self.head = [
             Flatten(),
-            Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.01)),
-            Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.01)),
+            Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.01),
+                  kernel_regularizer=regularizers.l2(0.01)),
+            Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.01),
+                  kernel_regularizer=regularizers.l2(0.01)),
             BatchNormalization(),
-            Dropout(0.1),
-            Dense(2, activation='softmax') #2 classes = real or fake
+            Dropout(0.5),
+            Dense(2, activation='softmax', kernel_regularizer=regularizers.l2(0.01)) #2 classes = real or fake
         ]
 
         self.vgg16 = tf.keras.Sequential(self.vgg16, name="vgg_base")
