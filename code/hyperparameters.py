@@ -1,4 +1,4 @@
-num_epochs = 8
+num_epochs = 20
 
 learning_rate = 1e-4
 
@@ -24,7 +24,7 @@ max_num_weights = 5
 """
 Defines the number of training examples per batch.
 """
-batch_size = 10
+batch_size = 32
 
 """
 The number of classes --> real vs fake
