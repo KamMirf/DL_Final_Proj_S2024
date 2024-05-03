@@ -1,65 +1,61 @@
 import os
 import shutil
-from pathlib import Path
-import random
+import argparse
 from collections import defaultdict
+from sklearn.model_selection import train_test_split
 
-def create_directory(path):
-    """ Ensure directory exists """
-    if not os.path.exists(path):
-        os.makedirs(path)
-    return path
-
-def copy_files(source, destination, files):
-    """ Copy a list of files from source to destination """
-    for file in files:
-        shutil.copy2(os.path.join(source, file), os.path.join(destination, file))
-
-def distribute_data(source_dir, train_dir, test_dir, split_ratio):
-    """ Distribute files into train and test directories by grouping by source """
-    for category in ['deepfake_cropped', 'original_cropped']:
-        files = os.listdir(os.path.join(source_dir, category))
-        source_dict = defaultdict(list)
-
-        # Group files by source
+def collect_source_files(directory):
+    """ Collects all files and groups them by video source prefix. """
+    files_by_source = defaultdict(list)
+    for root, dirs, files in os.walk(directory):
         for file in files:
-            source_prefix = file.split('frame')[0]
-            source_dict[source_prefix].append(file)
+            prefix = file.split('_frame')[0]
+            files_by_source[prefix].append(os.path.join(root, file))
+    return files_by_source
 
-        # Shuffle the sources
-        sources = list(source_dict.keys())
-        random.shuffle(sources)
+def create_train_test_split(files_by_source, test_size=0.2):
+    """ Splits the files into train and test sets, keeping the same source in one set. """
+    sources = list(files_by_source.keys())
+    train_sources, test_sources = train_test_split(sources, test_size=test_size, random_state=42)
+    
+    train_files = [file for src in train_sources for file in files_by_source[src]]
+    test_files = [file for src in test_sources for file in files_by_source[src]]
+    return train_files, test_files
 
-        # Split sources into train and test
-        split_point = int(len(sources) * split_ratio)
-        train_sources = sources[:split_point]
-        test_sources = sources[split_point:]
+def copy_files(files, target_dir):
+    """ Copies files to the specified directory, flattening the directory structure. """
+    for file_path in files:
+        file_name = os.path.basename(file_path)
+        new_path = os.path.join(target_dir, file_name)
+        os.makedirs(target_dir, exist_ok=True)
+        shutil.copy(file_path, new_path)
 
-        # Copy files to train and test directories
-        for source in train_sources:
-            copy_files(os.path.join(source_dir, category), os.path.join(train_dir, category.replace('_cropped', '')), source_dict[source])
-        for source in test_sources:
-            copy_files(os.path.join(source_dir, category), os.path.join(test_dir, category.replace('_cropped', '')), source_dict[source])
+def process_directory(source_dir, output_dir):
+    """ Processes a single directory of images. """
+    categories = {'deepfake_cropped': 'deepfake', 'original_cropped': 'original'}
 
-        print(f"Distributed {len(train_sources)} sources to train for {category.replace('_cropped', '')}")
-        print(f"Distributed {len(test_sources)} sources to test for {category.replace('_cropped', '')}")
-
-def main():
-    base_dirs = ['../cropped_data', '../cropped_data_Celeb']
-    combined_data = '../combined_data'
-
-    # Create combined data directories
-    train_dir = create_directory(os.path.join(combined_data, 'train'))
-    test_dir = create_directory(os.path.join(combined_data, 'test'))
-    create_directory(os.path.join(train_dir, 'deepfake'))
-    create_directory(os.path.join(train_dir, 'original'))
-    create_directory(os.path.join(test_dir, 'deepfake'))
-    create_directory(os.path.join(test_dir, 'original'))
-
-    # Distribute data from each base directory
-    for base_dir in base_dirs:
-        print(f"Processing directory: {base_dir}")
-        distribute_data(base_dir, train_dir, test_dir, 0.8)
+    for category, label in categories.items():
+        path = os.path.join(source_dir, category)
+        files_by_source = collect_source_files(path)
+        train_files, test_files = create_train_test_split(files_by_source)
+        
+        # Define target directories
+        train_target = os.path.join(output_dir, 'train', label)
+        test_target = os.path.join(output_dir, 'test', label)
+        
+        # Copy files to respective directories
+        copy_files(train_files, train_target)
+        copy_files(test_files, test_target)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='Split dataset into train/test sets for deepfake detection.')
+    parser.add_argument('--source_dir', type=str, help='Directory containing the dataset.')
+    parser.add_argument('--output_dir', type=str, default='./combined_data', help='Output directory for combined data.')
+    args = parser.parse_args()
+
+    # Create output directory if it doesn't exist
+    os.makedirs(args.output_dir, exist_ok=True)
+    
+    # Process the directory
+    process_directory(args.source_dir, args.output_dir)
+#python3 balance_dataset.py --source_dir ../cropped_data --output_dir ../combined_data
