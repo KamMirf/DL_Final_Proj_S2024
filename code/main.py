@@ -264,7 +264,9 @@ def main():
     # Compile model graph
     model.compile(
     optimizer=model.optimizer,
-    loss='binary_crossentropy')
+    loss='binary_crossentropy',
+    metrics=['accuracy']
+    )
     
     if ARGS.predict:
         # Load image and make prediction
