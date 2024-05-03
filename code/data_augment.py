@@ -82,7 +82,7 @@ class Datasets():
         # Setup data generators
         # These feed data to the training and testing routine based on the dataset
         self.train_data = self.get_data(
-            os.path.join(self.data_path, "train/"), task == '3', True, True)
+            os.path.join(self.data_path, "train/"), task == '3', True, False)
         self.test_data = self.get_data(
             os.path.join(self.data_path, "test/"), task == '3', False, False)
 

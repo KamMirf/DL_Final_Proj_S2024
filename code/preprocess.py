@@ -275,9 +275,14 @@ if __name__ == '__main__':
     python3 preprocess.py --data_dir ../cropped_data --split_data
 
 
-    ############# FULL DATA SET PREPROCESS ###############
-    python3 preprocess.py --video_path ../data/original_sequences/actors/c23/videos --output_path ../cropped_data/original_cropped --frame_skip 100
+    ############# FaceForensics++ DATA SET PREPROCESS ###############
+    python3 preprocess.py --video_path ../data/original_sequences/actors/c23/videos --output_path ../cropped_data/original_cropped --frame_skip 10
     python3 preprocess.py --video_path ../data/manipulated_sequences/DeepFakeDetection/c23/videos --output_path ../cropped_data/deepfake_cropped --frame_skip 100
+    
+     ############# Celeb-DF-v2 DATA SET PREPROCESS ###############
+    python3 preprocess.py --video_path ../Celeb-DF-v2/Celeb-real --output_path ../cropped_data_Celeb/original_cropped --frame_skip 13
+    python3 preprocess.py --video_path ../Celeb-DF-v2/Celeb-synthesis --output_path ../cropped_data_Celeb/deepfake_cropped --frame_skip 100
+    
     """
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--video_path', '-i', type=str, help='Path to the video directory or a single video file')
