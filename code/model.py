@@ -67,7 +67,9 @@ class VGGModel(tf.keras.Model):
                   kernel_regularizer=regularizers.l2(0.01)),
             BatchNormalization(),
             Dropout(0.5),
-            Dense(2, activation='softmax', kernel_regularizer=regularizers.l2(0.01)) #2 classes = real or fake
+            #Dense(2, activation='softmax', kernel_regularizer=regularizers.l2(0.01)) #2 classes = real or fake
+            Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01))  # Single output neuron for binary classification
+
         ]
 
         self.vgg16 = tf.keras.Sequential(self.vgg16, name="vgg_base")
@@ -85,4 +87,4 @@ class VGGModel(tf.keras.Model):
     def loss_fn(labels, predictions):
         """ Loss function for model. """
 
-        return losses.SparseCategoricalCrossentropy()(labels, predictions)
+        return losses.BinaryCrossentropy()(labels, predictions)

@@ -7,6 +7,7 @@ import tensorflow as tf
 import re
 import numpy as np
 
+
 from preprocess import extract_single_face
 import hyperparameters as hp
 from model import VGGModel
@@ -261,11 +262,9 @@ def main():
         os.makedirs(checkpoint_path)
 
     # Compile model graph
-    
     model.compile(
-        optimizer=model.optimizer,
-        loss=model.loss_fn,
-        metrics=["sparse_categorical_accuracy"])
+    optimizer=model.optimizer,
+    loss='binary_crossentropy')
     
     if ARGS.predict:
         # Load image and make prediction
@@ -284,10 +283,8 @@ def main():
         img = tf.image.decode_jpeg(img, channels=3)
         img = tf.expand_dims(img, axis=0)
         prediction = model.predict(img)
-        if prediction[0][0] > prediction[0][1]:
-            print("Model Prediction: Real")
-        else:
-            print("Model Prediction: Fake")
+        predicted_label = 'Real' if prediction > 0.5 else 'Fake'
+        print(f"Model Prediction: {predicted_label}")
     elif ARGS.evaluate:
         test(model, datasets.test_data)
         path = ARGS.lime_image
