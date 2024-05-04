@@ -250,7 +250,7 @@ def main():
         model.head.summary()
 
     # Load base of VGG model
-    model.vgg16.load_weights(ARGS.load_vgg, by_name=True)
+    model.vgg16.load_weights(ARGS.load_vgg)
 
     # Load checkpoints
     if ARGS.load_checkpoint is not None: 
