@@ -6,6 +6,8 @@ import hyperparameters as hp
 from keras import losses
 from keras import optimizers
 from keras import regularizers
+from keras.initializers import GlorotUniform
+
 
 """VGG CNN pretrained on ImageNet"""
 class VGGModel(tf.keras.Model):
@@ -13,7 +15,8 @@ class VGGModel(tf.keras.Model):
     def __init__(self):
         super(VGGModel, self).__init__()
 
-        self.optimizer = optimizers.Adam(hp.learning_rate)
+        self.optimizer = optimizers.Adam(hp.learning_rate, clipvalue=1.0)
+
 
         self.vgg16 = [
             # Block 1
@@ -62,14 +65,13 @@ class VGGModel(tf.keras.Model):
         self.head = [
             Flatten(),
             Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.01),
-                  kernel_regularizer=regularizers.l2(0.01)),
+                  kernel_regularizer=regularizers.l2(0.01), kernel_initializer=GlorotUniform()),
             Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.01),
-                  kernel_regularizer=regularizers.l2(0.01)),
+                  kernel_regularizer=regularizers.l2(0.01), kernel_initializer=GlorotUniform()),
             BatchNormalization(),
             Dropout(0.5),
-            #Dense(2, activation='softmax', kernel_regularizer=regularizers.l2(0.01)) #2 classes = real or fake
-            Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01))  # Single output neuron for binary classification
-
+            Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01),
+                  kernel_initializer=GlorotUniform())  # Single output neuron for binary classification
         ]
 
         self.vgg16 = tf.keras.Sequential(self.vgg16, name="vgg_base")
