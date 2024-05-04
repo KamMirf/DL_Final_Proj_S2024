@@ -58,4 +58,5 @@ if __name__ == "__main__":
     
     # Process the directory
     process_directory(args.source_dir, args.output_dir)
+    
 #python3 balance_dataset.py --source_dir ../cropped_data --output_dir ../combined_data

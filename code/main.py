@@ -33,6 +33,8 @@ Notes:
 Evaluate test data from a save:
 Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.weights.e000-acc0.5924.h5 --evaluate
 
+
+
 Predict on a single image:
 python3 main.py --predict {path to image}
 Ex. python3 main.py --predict ../data/real_and_fake_face/split_data/test/real/real_00001.jpg
@@ -97,11 +99,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def LIME_explainer(model, path, preprocess_fn, timestamp):
-    """
-    This function takes in a trained model and a path to an image and outputs 4
-    visual explanations using the LIME model
-    """
+"""def LIME_explainer(model, path, preprocess_fn, timestamp):
 
     save_directory = "lime_explainer_images" + os.sep + timestamp
     if not os.path.exists("lime_explainer_images"):
@@ -165,6 +163,7 @@ def LIME_explainer(model, path, preprocess_fn, timestamp):
     image_save_path = save_directory + os.sep + str(image_index) + ".png"
     plt.savefig(image_save_path, dpi=300, bbox_inches='tight')
     plt.show()
+    """
 
 
 def train(model, datasets, checkpoint_path, logs_path, init_epoch):
@@ -290,7 +289,7 @@ def main():
     elif ARGS.evaluate:
         test(model, datasets.test_data)
         path = ARGS.lime_image
-        LIME_explainer(model, path, datasets.preprocess_fn, timestamp)
+        #LIME_explainer(model, path, datasets.preprocess_fn, timestamp)
     else:
         print("training")
         train(model, datasets, checkpoint_path, logs_path, init_epoch)
