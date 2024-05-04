@@ -23,6 +23,18 @@ from skimage.transform import resize
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
+
+"""
+Note: When loading a checkpoint in, it only loads the weights for that process. Once it finishes, there will be NO weights loaded in
+the head of the model. The VGG weights always get loaded in before.
+
+New flag: --resume-training
+    - when loading a checkpoint, set this flag to let the model continue training from the epoch specified in the weight filename
+    
+For comparing the model weights Jason: (Loads in baseline weights)
+python3 main.py --load-checkpoint ../weights/baseline/vgg.e017-acc0.7418.weights.h5 --predict {image path or jpg link}
+"""
+
 """ 
 Continue training from a save: python3 main.py --load-checkpoint {path to h5 file in checkpoints/vgg_model/your model number}
 Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.weights.e000-acc0.5924.h5
@@ -32,6 +44,8 @@ Notes:
 
 Evaluate test data from a save:
 Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.weights.e000-acc0.5924.h5 --evaluate
+
+python3 main.py --load-checkpoint ../weights/baseline.vgg.e017-acc0.7418.weights.h5 
 
 
 
@@ -59,7 +73,8 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '--data',
-        default='..'+os.sep+'combined_data'+os.sep,
+        # default='..'+os.sep+'combined_data'+os.sep,
+        default='..'+os.sep+'cropped_data'+os.sep,
         help='Location where the dataset is stored.')
     parser.add_argument(
         '--load-vgg',
@@ -72,6 +87,10 @@ def parse_args():
         extension .h5). Checkpoints are automatically saved when you
         train your model. If you want to continue training from where
         you left off, this is how you would load your weights.''')
+    parser.add_argument(
+        '--resume-training',
+        action='store_true',
+        help='Indicates whether to resume training from the checkpoint epoch.')
     parser.add_argument(
         '--confusion',
         action='store_true',
@@ -95,7 +114,7 @@ def parse_args():
         '--lime-image',
         default=None,
         help='''Name of an image in the dataset to use for LIME evaluation.''')
-
+    
     return parser.parse_args()
 
 
@@ -183,15 +202,18 @@ def train(model, datasets, checkpoint_path, logs_path, init_epoch):
     if ARGS.confusion:
         callback_list.append(ConfusionMatrixLogger(logs_path, datasets))
 
-    # Begin training
-    model.fit(
-        x=datasets.train_data,
-        validation_data=datasets.test_data,
-        epochs=hp.num_epochs,
-        batch_size=None,            # Required as None as we use an ImageDataGenerator; see data_augment.py get_data()
-        callbacks=callback_list,
-        initial_epoch=init_epoch,
-    )
+    if ARGS.resume_training:
+        # Begin training
+        model.fit(
+            x=datasets.train_data,
+            validation_data=datasets.test_data,
+            epochs=hp.num_epochs,
+            batch_size=None,            # Required as None as we use an ImageDataGenerator; see data_augment.py get_data()
+            callbacks=callback_list,
+            initial_epoch=init_epoch,
+        )
+    else:
+        print("--resume-training was not set\n")
 
 
 def test(model, test_data):
@@ -262,9 +284,9 @@ def main():
 
     # Compile model graph
     model.compile(
-    optimizer=model.optimizer,
-    loss='binary_crossentropy',
-    metrics=['accuracy']
+        optimizer=model.optimizer,
+        loss='binary_crossentropy',
+        metrics=['accuracy']
     )
     
     if ARGS.predict:
