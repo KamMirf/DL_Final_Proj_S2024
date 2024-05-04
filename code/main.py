@@ -89,7 +89,6 @@ def parse_args():
         you left off, this is how you would load your weights.''')
     parser.add_argument(
         '--resume-training',
-        default=None,
         action='store_true',
         help='Indicates whether to resume training from the checkpoint epoch.')
     parser.add_argument(
@@ -214,7 +213,13 @@ def train(model, datasets, checkpoint_path, logs_path, init_epoch):
             initial_epoch=init_epoch,
         )
     else:
-        print("--resume-training was not set\n")
+        model.fit(
+            x=datasets.train_data,
+            validation_data=datasets.test_data,
+            epochs=hp.num_epochs,
+            batch_size=None,            # Required as None as we use an ImageDataGenerator; see data_augment.py get_data()
+            callbacks=callback_list
+        )
 
 
 def test(model, test_data):
