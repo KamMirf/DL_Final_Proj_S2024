@@ -27,6 +27,6 @@ Defines the number of training examples per batch.
 batch_size = 32
 
 """
-The number of classes --> real vs fake
+The number of classes --> deepfake or not deepfake
 """
 num_classes = 1
