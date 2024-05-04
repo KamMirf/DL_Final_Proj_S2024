@@ -1,6 +1,6 @@
 num_epochs = 20
 
-learning_rate = 1e-4
+learning_rate = 0.001
 
 """
 Resize image.
@@ -29,4 +29,4 @@ batch_size = 32
 """
 The number of classes --> real vs fake
 """
-num_classes = 2
+num_classes = 1

@@ -64,12 +64,12 @@ class VGGModel(tf.keras.Model):
        #custom head to predict real or fake
         self.head = [
             Flatten(),
-            Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.01),
-                  kernel_regularizer=regularizers.l2(0.01), kernel_initializer=GlorotUniform()),
-            Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.01),
-                  kernel_regularizer=regularizers.l2(0.01), kernel_initializer=GlorotUniform()),
             BatchNormalization(),
+            Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.01),
+                  kernel_regularizer=regularizers.l2(0.01), kernel_initializer=GlorotUniform()),
             Dropout(0.5),
+            Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.01),
+                  kernel_regularizer=regularizers.l2(0.01), kernel_initializer=GlorotUniform()),
             Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01),
                   kernel_initializer=GlorotUniform())  # Single output neuron for binary classification
         ]

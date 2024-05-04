@@ -72,7 +72,7 @@ class Datasets():
         self.class_to_idx = {}
 
         # For storing list of classes
-        self.classes = [""] * hp.num_classes
+        #self.classes = [""] * hp.num_classes
 
         # Mean and std for standardization
         self.mean = np.zeros((hp.img_size,hp.img_size,3))
@@ -212,31 +212,11 @@ class Datasets():
         # VGG must take images of size 224x224
         img_size = 224 if is_vgg else hp.img_size
 
-        classes_for_flow = None
-
-        # Make sure all data generators are aligned in label indices
-        if bool(self.idx_to_class):
-            classes_for_flow = self.classes
-
-        # Form image data generator from directory structure
         data_gen = data_gen.flow_from_directory(
             path,
             target_size=(img_size, img_size),
-            class_mode='sparse',
+            class_mode='binary',
             batch_size=hp.batch_size,
-            shuffle=shuffle,
-            classes=classes_for_flow)
-
-        # Setup the dictionaries if not already done
-        if not bool(self.idx_to_class):
-            unordered_classes = []
-            for dir_name in os.listdir(path):
-                if os.path.isdir(os.path.join(path, dir_name)):
-                    unordered_classes.append(dir_name)
-
-            for img_class in unordered_classes:
-                self.idx_to_class[data_gen.class_indices[img_class]] = img_class
-                self.class_to_idx[img_class] = int(data_gen.class_indices[img_class])
-                self.classes[int(data_gen.class_indices[img_class])] = img_class
-
+            shuffle=shuffle
+        )
         return data_gen
