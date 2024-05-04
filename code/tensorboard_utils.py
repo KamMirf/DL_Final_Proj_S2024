@@ -29,7 +29,7 @@ class ImageLabelingLogger(tf.keras.callbacks.Callback):
         super(ImageLabelingLogger, self).__init__()
 
         self.datasets = datasets
-        self.task = datasets.task
+        #self.task = datasets.task
         self.logs_path = logs_path
 
         print("Done setting up image labeling logger.")
