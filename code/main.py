@@ -234,7 +234,7 @@ def main():
     # Run script from location of main.py
     os.chdir(sys.path[0])
     print("ARGS data: " + ARGS.data) 
-    datasets = Datasets(ARGS.data, 3)
+    datasets: Datasets = Datasets(ARGS.data)
 
     
     model = VGGModel()
