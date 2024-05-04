@@ -81,9 +81,9 @@ class Datasets():
         # Setup data generators
         # These feed data to the training and testing routine based on the dataset
         self.train_data = self.get_data(
-            os.path.join(self.data_path, "train/"), is_vgg=True, shuffle=True, augment=True)
+            os.path.join(self.data_path, "train/"), is_vgg=True, shuffle=True, augment=False)
         self.test_data = self.get_data(
-            os.path.join(self.data_path, "test/"), is_vgg=True, shuffle=False, augment=True)
+            os.path.join(self.data_path, "test/"), is_vgg=True, shuffle=False, augment=False)
 
     def calc_mean_and_std(self):
         """ Calculate mean and standard deviation of a sample of the
