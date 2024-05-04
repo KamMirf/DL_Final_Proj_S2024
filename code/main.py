@@ -89,6 +89,7 @@ def parse_args():
         you left off, this is how you would load your weights.''')
     parser.add_argument(
         '--resume-training',
+        default=None,
         action='store_true',
         help='Indicates whether to resume training from the checkpoint epoch.')
     parser.add_argument(
