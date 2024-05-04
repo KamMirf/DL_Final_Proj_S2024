@@ -198,14 +198,13 @@ class Datasets():
         if augment:
 
             data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-                preprocessing_function=self.preprocess_fn
-                , 
-                brightness_range=[0.8, 1.2],
+                preprocessing_function=self.preprocess_fn,
+                brightness_range=[0.9, 1.1],
                 # rotation_range=3, 
                 # width_shift_range=0.15, 
                 # height_shift_range=0.15,
                 # zoom_range=0.10,
-                horizontal_flip=True
+                # horizontal_flip=True
                 )
 
         else:
