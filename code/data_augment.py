@@ -81,9 +81,9 @@ class Datasets():
         # Setup data generators
         # These feed data to the training and testing routine based on the dataset
         self.train_data = self.get_data(
-            os.path.join(self.data_path, "train/"), is_vgg=True, shuffle=True, augment=False)
+            os.path.join(self.data_path, "train/"), is_vgg=True, shuffle=True, augment=True)
         self.test_data = self.get_data(
-            os.path.join(self.data_path, "test/"), is_vgg=True, shuffle=False, augment=False)
+            os.path.join(self.data_path, "test/"), is_vgg=True, shuffle=False, augment=True)
 
     def calc_mean_and_std(self):
         """ Calculate mean and standard deviation of a sample of the
@@ -199,7 +199,7 @@ class Datasets():
 
             data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
                 preprocessing_function=self.preprocess_fn,
-                brightness_range=[0.9, 1.1],
+                # brightness_range=[0.9, 1.1],
                 # rotation_range=3, 
                 # width_shift_range=0.15, 
                 # height_shift_range=0.15,
