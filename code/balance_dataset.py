@@ -50,7 +50,7 @@ def process_directory(source_dir, output_dir):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Split dataset into train/test sets for deepfake detection.')
     parser.add_argument('--source_dir', type=str, help='Directory containing the dataset.')
-    parser.add_argument('--output_dir', type=str, default='./combined_data', help='Output directory for combined data.')
+    parser.add_argument('--output_dir', type=str, default='../combined_data', help='Output directory for combined data.')
     args = parser.parse_args()
 
     # Create output directory if it doesn't exist

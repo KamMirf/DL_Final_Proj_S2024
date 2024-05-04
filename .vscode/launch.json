@@ -1,20 +1,23 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Download Dataset",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "code/download_FF.py",
-            "console": "integratedTerminal",
-            "args": [
-                "../data", 
-                "--dataset_type", "source_to_target_images",
-
-            ]
-        }
-    ]
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Download Dataset",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "code/download_FF.py",
+      "console": "integratedTerminal",
+      "args": ["../data", "--dataset_type", "source_to_target_images"]
+    },
+    {
+      "name": "Train",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "code/main.py",
+      "console": "integratedTerminal"
+    }
+  ]
 }

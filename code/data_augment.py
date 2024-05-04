@@ -150,13 +150,20 @@ class Datasets():
         Returns:
             img - numpy array of shape (image size, image size, 3)
         """
-
         img = (img - self.mean) / self.std    
-
 
         return img
     
     def add_noise(self, img):
+        """ Function for adding noise to an input image.
+
+        Arguments:
+            img - numpy array of shape (image size, image size, 3)
+        
+        Returns:
+            img_noisy - numpy array of shape (image size, image size, 3)
+        """
+
         noise_factor = 0.1
         noise = np.random.randn(*img.shape)
         img_noisy = img + noise_factor * noise
@@ -164,10 +171,10 @@ class Datasets():
 
     def preprocess_fn(self, img):
         """ Preprocess function for ImageDataGenerator. """
-        img = img / 255.
-        img = self.standardize(img)
-        img = tf.keras.applications.vgg16.preprocess_input(img)
+        # img = self.standardize(img)
         img = self.add_noise(img)
+        img = tf.keras.applications.vgg16.preprocess_input(img)
+        return img
 
     def get_data(self, path, is_vgg, shuffle, augment):
         """ Returns an image data generator which can be iterated
