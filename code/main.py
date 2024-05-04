@@ -279,6 +279,7 @@ def main():
             img_path = ARGS.predict
         new_path = extract_single_face(img_path)
         img = tf.io.read_file(new_path)
+        img = datasets.preprocess_fn(img)
         if ARGS.predict.startswith("http"):
             os.remove(img_path) # Remove original temp file for URL
         os.remove(new_path) # Remove temp file

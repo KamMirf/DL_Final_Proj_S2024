@@ -83,7 +83,7 @@ class Datasets():
         self.train_data = self.get_data(
             os.path.join(self.data_path, "train/"), is_vgg=True, shuffle=True, augment=True)
         self.test_data = self.get_data(
-            os.path.join(self.data_path, "test/"), is_vgg=True, shuffle=False, augment=False)
+            os.path.join(self.data_path, "test/"), is_vgg=True, shuffle=False, augment=True)
 
     def calc_mean_and_std(self):
         """ Calculate mean and standard deviation of a sample of the
@@ -171,9 +171,10 @@ class Datasets():
 
     def preprocess_fn(self, img):
         """ Preprocess function for ImageDataGenerator. """
-        # img = self.standardize(img)
-        img = self.add_noise(img)
-        img = tf.keras.applications.vgg16.preprocess_input(img)
+        img = img / 255.
+        img = self.standardize(img)
+        # img = self.add_noise(img)
+        # img = tf.keras.applications.vgg16.preprocess_input(img)
         return img
 
     def get_data(self, path, is_vgg, shuffle, augment):
@@ -204,7 +205,7 @@ class Datasets():
                 # width_shift_range=0.15, 
                 # height_shift_range=0.15,
                 # zoom_range=0.10,
-                # horizontal_flip=True
+                horizontal_flip=True
                 )
 
         else:
