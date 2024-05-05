@@ -73,8 +73,8 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '--data',
-        # default='..'+os.sep+'combined_data'+os.sep,
-        default='..'+os.sep+'cropped_data'+os.sep,
+        default='..'+os.sep+'combined_data'+os.sep,
+        #default='..'+os.sep+'cropped_data'+os.sep,
         help='Location where the dataset is stored.')
     parser.add_argument(
         '--load-vgg',
