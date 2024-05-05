@@ -174,7 +174,6 @@ class Datasets():
         img = self.add_noise(img)
         img = img / 255.
         img = self.standardize(img)
-        # img = self.add_noise(img)
         # img = tf.keras.applications.vgg16.preprocess_input(img)
         return img
 
