@@ -189,10 +189,11 @@ class Datasets():
             img_with_squares[x:x+square_size, y:y+square_size, :] = 0
         return img_with_squares
 
-    def preprocess_fn(self, img):
+    def preprocess_fn(self, img, augment=False):
         """ Preprocess function for ImageDataGenerator. """
-        img = self.add_noise(img)
-        img = self.add_black_squares_randomly(img)
+        if (augment):
+            img = self.add_noise(img)
+            img = self.add_black_squares_randomly(img)
         img = img / 255.
         img = self.standardize(img)
         # img = tf.keras.applications.vgg16.preprocess_input(img)
@@ -219,7 +220,7 @@ class Datasets():
         if augment:
 
             data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
-                preprocessing_function=self.preprocess_fn,
+                preprocessing_function=self.preprocess_fn(augment=True),
                 brightness_range=[0.9, 1.1],
                 # rotation_range=3, 
                 # width_shift_range=0.15, 
