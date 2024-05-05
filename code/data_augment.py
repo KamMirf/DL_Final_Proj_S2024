@@ -169,9 +169,30 @@ class Datasets():
         img_noisy = img + noise_factor * noise
         return np.clip(img_noisy, 0.0, 255.0)
 
+    def add_black_squares_randomly(self, img):
+        """ Function for adding black squares to an input image.
+
+        Arguments:
+            img - numpy array of shape (image size, image size, 3)
+        
+        Returns:
+            img_black - numpy array of shape (image size, image size, 3)
+        """
+
+        min_square_size: int = 5
+        max_square_size: int = 15
+        img_with_squares = img.copy()
+        for _ in range(np.random.randint(0, 5)): # Add 0-4 squares of size square_size between min_square_size and max_square_size
+            square_size = np.random.randint(min_square_size, max_square_size)
+            x = np.random.randint(0, hp.img_size - square_size)
+            y = np.random.randint(0, hp.img_size - square_size)
+            img_with_squares[x:x+square_size, y:y+square_size, :] = 0
+        return img_with_squares
+
     def preprocess_fn(self, img):
         """ Preprocess function for ImageDataGenerator. """
         img = self.add_noise(img)
+        img = self.add_black_squares_randomly(img)
         img = img / 255.
         img = self.standardize(img)
         # img = tf.keras.applications.vgg16.preprocess_input(img)
