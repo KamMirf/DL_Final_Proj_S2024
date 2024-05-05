@@ -171,6 +171,7 @@ class Datasets():
 
     def preprocess_fn(self, img):
         """ Preprocess function for ImageDataGenerator. """
+        img = self.add_noise(img)
         img = img / 255.
         img = self.standardize(img)
         # img = self.add_noise(img)
