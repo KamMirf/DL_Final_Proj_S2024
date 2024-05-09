@@ -13,7 +13,7 @@ import hyperparameters as hp
 from model import VGGModel
 from data_augment import Datasets
 from tensorboard_utils import \
-        ImageLabelingLogger, ConfusionMatrixLogger, CustomModelSaver
+        CustomModelSaver
 from lime import lime_image
 from skimage.segmentation import mark_boundaries
 from matplotlib import pyplot as plt
@@ -33,20 +33,12 @@ New flag: --resume-training
     
 For comparing the model weights Jason: (Loads in baseline weights)
 python3 main.py --load-checkpoint ../weights/baseline/vgg.e017-acc0.7418.weights.h5 --predict {image path or jpg link}
+python3 main.py --load-checkpoint ../weights/baseline/vgg.e017-acc0.7418.weights.h5 --predict ../cropped_data/test/deepfake/01_02__meeting_serious__YVGY8LOK_frame_200_face_0.jpg
 """
 
 """ 
-Continue training from a save: python3 main.py --load-checkpoint {path to h5 file in checkpoints/vgg_model/your model number}
-Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.weights.e000-acc0.5924.h5
-Notes: 
-- continues from epoch you left off on
-- automatically saves checkpoint from epochs that produce a higher accuracy
-
 Evaluate test data from a save:
 Ex. python3 main.py --load-checkpoint checkpoints/vgg_model/043024-145118/vgg.weights.e000-acc0.5924.h5 --evaluate
-
-python3 main.py --load-checkpoint ../weights/baseline.vgg.e017-acc0.7418.weights.h5 
-
 
 
 Predict on a single image:
@@ -58,8 +50,6 @@ Can be used with --load-checkpoint to predict on a model from a save
 
 LIME:
 python main.py --evaluate --lime-image ../cropped_data/test/deepfake/01_02__outside_talking_still_laughing__YVGY8LOK_frame_300_face_0.jpg
-- without --load-checkpoint, I don't think it has any weights for the head, but note that loading weights from anything but the last epoch
-will require the model to continue to train the rest of the epochs it has left before evaluating and then doing lime
 
 
 python3 main.py --load-checkpoint {path} --lime-image {path}
@@ -73,8 +63,8 @@ def parse_args():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         '--data',
-        default='..'+os.sep+'combined_data'+os.sep,
-        #default='..'+os.sep+'cropped_data'+os.sep,
+        # default='..'+os.sep+'combined_data'+os.sep,
+        default='..'+os.sep+'cropped_data'+os.sep,
         help='Location where the dataset is stored.')
     parser.add_argument(
         '--load-vgg',
@@ -91,12 +81,6 @@ def parse_args():
         '--resume-training',
         action='store_true',
         help='Indicates whether to resume training from the checkpoint epoch.')
-    parser.add_argument(
-        '--confusion',
-        action='store_true',
-        help='''Log a confusion matrix at the end of each
-        epoch (viewable in Tensorboard). This is turned off
-        by default as it takes a little bit of time to complete.''')
     parser.add_argument(
         '--evaluate',
         action='store_true',
@@ -118,7 +102,7 @@ def parse_args():
     return parser.parse_args()
 
 
-"""def LIME_explainer(model, path, preprocess_fn, timestamp):
+def LIME_explainer(model, path, preprocess_fn, timestamp):
 
     save_directory = "lime_explainer_images" + os.sep + timestamp
     if not os.path.exists("lime_explainer_images"):
@@ -143,7 +127,6 @@ def parse_args():
 
         image_index += 1
 
-    # Read the image and preprocess it as before
     image = imread(path)
     if len(image.shape) == 2:
         image = np.stack([image, image, image], axis=-1)
@@ -182,28 +165,21 @@ def parse_args():
     image_save_path = save_directory + os.sep + str(image_index) + ".png"
     plt.savefig(image_save_path, dpi=300, bbox_inches='tight')
     plt.show()
-    """
+    
 
 
 def train(model, datasets, checkpoint_path, logs_path, init_epoch):
     """ Training routine. """
     
-    # Keras callbacks for training
     callback_list = [
         tf.keras.callbacks.TensorBoard(
             log_dir=logs_path,
             update_freq='epoch',
             profile_batch=0),
-        ImageLabelingLogger(logs_path, datasets),
         CustomModelSaver(checkpoint_path, 3, hp.max_num_weights)
     ]
 
-    # Include confusion logger in callbacks if flag set
-    if ARGS.confusion:
-        callback_list.append(ConfusionMatrixLogger(logs_path, datasets))
-
     if ARGS.resume_training:
-        # Begin training
         model.fit(
             x=datasets.train_data,
             validation_data=datasets.test_data,
@@ -225,7 +201,6 @@ def train(model, datasets, checkpoint_path, logs_path, init_epoch):
 def test(model, test_data):
     """ Testing routine. """
 
-    # Run model on test set
     model.evaluate(
         x=test_data,
         verbose=1,
@@ -249,10 +224,6 @@ def main():
         init_epoch = int(re.match(regex, ARGS.load_checkpoint).group(1)) + 1
         timestamp = os.path.basename(os.path.dirname(ARGS.load_checkpoint))
 
-
-    # If paths provided by program arguments are accurate, then this will
-    # ensure they are used. If not, these directories/files will be
-    # set relative to the directory of main.py
     if os.path.exists(ARGS.data):
         ARGS.data = os.path.abspath(ARGS.data)
     if os.path.exists(ARGS.load_vgg):
@@ -261,7 +232,7 @@ def main():
     # Run script from location of main.py
     os.chdir(sys.path[0])
     print("ARGS data: " + ARGS.data) 
-    datasets = Datasets(ARGS.data, 3)
+    datasets = Datasets(ARGS.data)
 
     
     model = VGGModel()
@@ -272,7 +243,6 @@ def main():
         os.sep + timestamp + os.sep
     model(tf.keras.Input(shape=(224, 224, 3)))
 
-    # Print summaries for both parts of the model
     if not ARGS.predict: # Don't print summaries if just predicting on an image
         model.vgg16.summary()
         model.head.summary()
@@ -288,7 +258,6 @@ def main():
     if not ARGS.evaluate and not os.path.exists(checkpoint_path):
         os.makedirs(checkpoint_path)
 
-    # Compile model graph
     model.compile(
         optimizer=model.optimizer,
         loss='binary_crossentropy',

@@ -313,5 +313,3 @@ if __name__ == '__main__':
         split_data(args.data_dir)
         print("Data splitting complete.")
 
-
-#find videos -maxdepth 1 -type f | wc -l
